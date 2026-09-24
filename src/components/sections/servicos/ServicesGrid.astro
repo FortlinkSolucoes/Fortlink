@@ -4,8 +4,8 @@ import ServicesNav from './ServicesNav.astro';
 import ServiceCard from './ServiceCard.astro';
 import { services } from '@/data/site';
 
-// Bento rhythm on a 12-col grid: 7+5 / 4+4+4 / 5+7 / 8+4. Repeats if services grow.
-const rhythm = ['lg', 'md', 'sm', 'sm', 'sm', 'md', 'lg', 'xl', 'sm'] as const;
+// Bento rhythm on a 12-col grid: 7+5 / 4+4+4 / 5+7 / 8+4 / 6+6 — 11 services, no gaps.
+const rhythm = ['lg', 'md', 'sm', 'sm', 'sm', 'md', 'lg', 'xl', 'sm', 'half', 'half'] as const;
 const count = String(services.length).padStart(2, '0');
 ---
 
@@ -98,6 +98,10 @@ const count = String(services.length).padStart(2, '0');
 
     .bento > :global(.svc--xl) {
       grid-column: span 8;
+    }
+
+    .bento > :global(.svc--half) {
+      grid-column: span 6;
     }
 
     .bento > :global(.svc--lg),

@@ -38,7 +38,9 @@ export type IconName =
   | 'voip'
   | 'shield'
   | 'noc'
-  | 'wifi';
+  | 'wifi'
+  | 'process'
+  | 'lgpd';
 
 export interface Service {
   slug: string;
@@ -49,6 +51,14 @@ export interface Service {
 }
 
 export const services: Service[] = [
+  {
+    // Confirmed by the owner (2026-09-24): IT planning and processes are one service.
+    slug: 'consultoria',
+    icon: 'process',
+    title: 'Consultoria em Planejamento e Processos',
+    summary: 'Planejamento de TI e organização dos processos da sua empresa no mesmo lugar, para a tecnologia trabalhar a favor da operação.',
+    details: ['Planejamento de TI', 'Mapeamento de processos', 'Melhoria de fluxos de trabalho', 'Alinhamento entre TI e operação'],
+  },
   {
     slug: 'redes',
     icon: 'network',
@@ -97,6 +107,14 @@ export const services: Service[] = [
     title: 'Segurança e Firewalls',
     summary: 'Proteção avançada da rede com VPN, controle de acesso e políticas personalizadas.',
     details: ['Firewall de nova geração', 'VPN site-to-site e client', 'Filtro de conteúdo', 'Políticas por usuário'],
+  },
+  {
+    // Confirmed by the owner (2026-09-24): focused on security, structure and governance.
+    slug: 'lgpd',
+    icon: 'lgpd',
+    title: 'Adequação à LGPD',
+    summary: 'Segurança, estrutura e governança para a sua empresa tratar dados pessoais de acordo com a LGPD.',
+    details: ['Segurança da informação', 'Estrutura e controles de acesso', 'Governança de dados', 'Políticas e documentação'],
   },
   {
     slug: 'noc',
@@ -179,10 +197,12 @@ export const offer = {
 
 /** Pain → solution rows, written in the customer's own voice. `slug` links to a service. */
 export const pains = [
+  { text: 'Cada setor faz do seu jeito e ninguém sabe onde o processo trava.', slug: 'consultoria' },
   { text: 'A internet cai toda semana e ninguém sabe o porquê.', slug: 'redes' },
   { text: 'O rack virou um ninho de cabos.', slug: 'cabeamento' },
   { text: 'Qualquer problema no computador deixa a equipe parada por horas.', slug: 'suporte' },
   { text: 'Não sei quem está acessando a minha rede.', slug: 'firewall' },
+  { text: 'Não sei se a minha empresa está de acordo com a LGPD.', slug: 'lgpd' },
   { text: 'Só descubro a falha quando o cliente reclama.', slug: 'noc' },
   { text: 'O Wi-Fi não pega na sala de reunião.', slug: 'wifi' },
   { text: 'Não vejo o que acontece na empresa quando não estou lá.', slug: 'cftv' },
