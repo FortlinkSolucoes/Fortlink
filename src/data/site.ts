@@ -119,12 +119,12 @@ export const highlights = ['Atendimento ágil', 'Monitoramento contínuo', 'Equi
 /** /servicos/ hero lead: what the page is, ending on the entry offer. */
 export const servicesPage = {
   eyebrow: 'Da rede ao datacenter',
-  lead: 'Infraestrutura, suporte, segurança e monitoramento para empresas de Foz do Iguaçu. Não sabe qual serviço precisa? Comece pelo diagnóstico gratuito.',
+  lead: 'Infraestrutura, suporte, segurança e monitoramento para empresas de Foz do Iguaçu e região. Não sabe qual serviço precisa? Comece pelo diagnóstico gratuito.',
 } as const;
 
 /** Home hero copy. The generic site.tagline stays for SEO only. */
 export const hero = {
-  lead: 'Redes, suporte técnico, CFTV e monitoramento para empresas de Foz do Iguaçu. Comece por um diagnóstico gratuito da sua TI.',
+  lead: 'Redes, suporte técnico, CFTV e monitoramento para empresas de Foz do Iguaçu e região. Comece por um diagnóstico gratuito da sua TI.',
 } as const;
 
 export const about = {
