@@ -1,0 +1,312 @@
+---
+/**
+ * "Como trabalhamos" — one circuit timeline shared by the home and /servicos/,
+ * so the same content always looks the same. The trace draws with scroll and lights each node.
+ */
+import { process } from '@/data/site';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+
+interface Props {
+  id?: string;
+  /** Tighter top padding when it follows a related section. */
+  tight?: boolean;
+}
+
+const { id = 'como-trabalhamos', tight = false } = Astro.props;
+
+// Circuit trace linking the 4 node centers (x = 125/375/625/875) with PCB-style 45° jogs.
+const hPath =
+  'M125 60 H200 L230 30 H270 L300 60 H375 H450 L480 90 H520 L550 60 H625 H700 L730 30 H770 L800 60 H875';
+---
+
+<section class:list={['process section', { 'section--tight': tight }]} id={id}>
+  <div class="container">
+    <SectionHeading
+      eyebrow="Como trabalhamos"
+      title='Do diagnóstico ao <span class="text-gradient">monitoramento contínuo</span>.'
+    />
+
+    <div class="process__board" data-process>
+      <svg class="process__circuit process__circuit--h" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="process-grad-h" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" class="stop-cyan"></stop>
+            <stop offset="0.5" class="stop-blue"></stop>
+            <stop offset="1" class="stop-magenta"></stop>
+          </linearGradient>
+        </defs>
+        <path class="process__base" d={hPath}></path>
+        <path class="process__line" d={hPath} pathLength="1" stroke="url(#process-grad-h)" data-process-line></path>
+      </svg>
+
+      <svg class="process__circuit process__circuit--v" viewBox="0 0 40 1000" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="process-grad-v" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" class="stop-cyan"></stop>
+            <stop offset="0.5" class="stop-blue"></stop>
+            <stop offset="1" class="stop-magenta"></stop>
+          </linearGradient>
+        </defs>
+        <path class="process__base" d="M20 0 V1000"></path>
+        <path class="process__line" d="M20 0 V1000" pathLength="1" stroke="url(#process-grad-v)" data-process-line></path>
+      </svg>
+
+      <ol class="process__steps" role="list">
+        {
+          process.map((p) => (
+            <li class="process__step" data-process-step>
+              <span class="process__node" aria-hidden="true" />
+              <span class="process__num" aria-hidden="true">{p.step}</span>
+              <h3 class="process__title">
+                <span class="sr-only">Etapa {p.step}: </span>
+                {p.title}
+              </h3>
+              <p class="process__text muted">{p.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+</section>
+
+<style>
+  .process__board {
+    position: relative;
+    margin-top: var(--head-gap);
+  }
+
+  .process__circuit {
+    position: absolute;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .process__circuit path {
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .stop-cyan {
+    stop-color: var(--c-cyan);
+  }
+
+  .stop-blue {
+    stop-color: var(--c-blue);
+  }
+
+  .stop-magenta {
+    stop-color: var(--c-magenta);
+  }
+
+  .process__base {
+    stroke: var(--line-strong);
+  }
+
+  .process__line {
+    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--c-cyan) 45%, transparent));
+  }
+
+  /* Mobile: vertical rail on the left. */
+  .process__circuit--h {
+    display: none;
+  }
+
+  .process__circuit--v {
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 40px;
+    height: calc(100% - 24px);
+  }
+
+  .process__steps {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--sp-8);
+  }
+
+  .process__step {
+    position: relative;
+    padding-left: var(--sp-8);
+    display: grid;
+    gap: var(--sp-3);
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+  }
+
+  .process__node {
+    position: absolute;
+    left: 20px;
+    top: 12px;
+    width: 18px;
+    height: 18px;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--c-cyan);
+  }
+
+  .process__node::before,
+  .process__node::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    transition: opacity var(--dur) var(--ease-out);
+  }
+
+  .process__node::before {
+    inset: 3px;
+    background: var(--grad-brand);
+  }
+
+  /* Glow ring: one opacity pulse at the moment the node lights up, then it rests. */
+  .process__node::after {
+    inset: -6px;
+    box-shadow: var(--glow-sm);
+    opacity: 0.5;
+  }
+
+  .is-armed .process__step.is-lit .process__node::after {
+    animation: node-pulse 1.2s var(--ease-out) 1;
+  }
+
+  @keyframes node-pulse {
+    0% {
+      opacity: 0;
+    }
+    35% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.5;
+    }
+  }
+
+  .process__num {
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.2em;
+    color: var(--accent);
+  }
+
+  .process__title {
+    font-size: var(--fs-lg);
+  }
+
+  .process__text {
+    max-width: 30ch;
+  }
+
+  /* Armed by JS: unlit steps are dimmed until the trace reaches them. */
+  .is-armed .process__step:not(.is-lit) {
+    opacity: 0.35;
+    transform: translateY(12px);
+  }
+
+  .is-armed .process__step:not(.is-lit) .process__node {
+    border-color: var(--line-strong);
+  }
+
+  .is-armed .process__step:not(.is-lit) .process__node::before,
+  .is-armed .process__step:not(.is-lit) .process__node::after {
+    opacity: 0;
+    animation: none;
+  }
+
+  @media (min-width: 960px) {
+    .process__circuit--v {
+      display: none;
+    }
+
+    .process__circuit--h {
+      display: block;
+      inset: 0 0 auto 0;
+      width: 100%;
+      height: 120px;
+    }
+
+    .process__steps {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--sp-6);
+    }
+
+    .process__step {
+      padding-left: 0;
+      padding-top: calc(var(--sp-9) + var(--sp-2));
+      justify-items: center;
+      text-align: center;
+    }
+
+    .process__node {
+      left: 50%;
+      top: 60px;
+      width: 22px;
+      height: 22px;
+    }
+
+    .process__text {
+      margin-inline: auto;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, ScrollTrigger, onMotionReady, prefersReducedMotion } from '@/scripts/motion';
+
+  onMotionReady(() => {
+    const board = document.querySelector<HTMLElement>('[data-process]');
+    if (!board || prefersReducedMotion()) return;
+
+    const steps = Array.from(board.querySelectorAll<HTMLElement>('[data-process-step]'));
+    const lines = board.querySelectorAll<SVGPathElement>('[data-process-line]');
+
+    board.classList.add('is-armed');
+    gsap.set(lines, { strokeDasharray: 1, strokeDashoffset: 1 });
+
+    const light = (progress: number) => {
+      const last = steps.length - 1;
+      steps.forEach((step, i) => step.classList.toggle('is-lit', progress >= i / last - 0.02));
+    };
+
+    const mm = gsap.matchMedia();
+
+    // Desktop: nodes sit at evenly spaced fractions of the trace, so light them by progress.
+    mm.add('(min-width: 960px)', () => {
+      light(0);
+      gsap.to(lines, {
+        strokeDashoffset: 0,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: board,
+          start: 'top 75%',
+          end: 'bottom 45%',
+          scrub: 0.6,
+          onUpdate: (self) => light(self.progress),
+        },
+      });
+    });
+
+    // Mobile: steps have uneven heights — draw the rail by scroll, light each node when it arrives.
+    mm.add('(max-width: 959.98px)', () => {
+      steps.forEach((step) => step.classList.remove('is-lit'));
+      gsap.to(lines, {
+        strokeDashoffset: 0,
+        ease: 'none',
+        scrollTrigger: { trigger: board, start: 'top 65%', end: 'bottom 65%', scrub: 0.6 },
+      });
+      steps.forEach((step) => {
+        ScrollTrigger.create({
+          trigger: step,
+          start: 'top 65%',
+          onEnter: () => step.classList.add('is-lit'),
+          onLeaveBack: () => step.classList.remove('is-lit'),
+        });
+      });
+    });
+  });
+</script>

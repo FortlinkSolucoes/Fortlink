@@ -7,15 +7,20 @@ import WhatsAppFloat from '@/components/layout/WhatsAppFloat.astro';
 import Cursor from '@/components/fx/Cursor.astro';
 import Preloader from '@/components/fx/Preloader.astro';
 import Seo from '@/components/layout/Seo.astro';
+import FxBoot from '@/components/fx/FxBoot.astro';
+import soraLatin from '@fontsource-variable/sora/files/sora-latin-wght-normal.woff2?url';
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 
 interface Props {
   title?: string;
   description?: string;
   /** Show the brand preloader (home only). */
   preloader?: boolean;
+  /** Show the big closing CTA in the footer (turn off when the page already ends with one). */
+  footerCta?: boolean;
 }
 
-const { title, description = site.description, preloader = false } = Astro.props;
+const { title, description = site.description, preloader = false, footerCta = true } = Astro.props;
 const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | Infraestrutura e soluções em TI`;
 ---
 
@@ -31,6 +36,8 @@ const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | Infraestru
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches)
         document.documentElement.classList.add('reduced-motion');
     </script>
+    <link rel="preload" href={soraLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
     <Seo title={fullTitle} description={description} />
   </head>
   <body>
@@ -38,10 +45,11 @@ const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | Infraestru
     {preloader && <Preloader />}
     <Cursor />
     <Header />
-    <main id="conteudo">
+    <main id="conteudo" tabindex="-1">
       <slot />
     </main>
-    <Footer />
+    <Footer cta={footerCta} />
+    <FxBoot />
     <WhatsAppFloat />
     <script>
       import { initMotion } from '@/scripts/motion';

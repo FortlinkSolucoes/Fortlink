@@ -1,0 +1,80 @@
+---
+/**
+ * Section heading block: eyebrow + big title + optional lead.
+ * `title` is rendered with set:html so it may contain <span class="text-gradient">…</span>
+ * (trusted content from src/data/site.ts only). The title carries `data-split` for the FX split reveal.
+ */
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+  align?: 'left' | 'center';
+  as?: 'h1' | 'h2';
+  class?: string;
+  id?: string;
+  /** Masked line reveal on the title (default). Off → the title fades up like a block. */
+  split?: boolean;
+}
+
+const { eyebrow, title, lead, align = 'left', as: Tag = 'h2', class: className, id, split = true } = Astro.props;
+---
+
+<div class:list={['sh', `sh--${align}`, `sh--${Tag}`, className]}>
+  {
+    eyebrow && (
+      <p class="eyebrow sh__eyebrow" data-reveal="fade">
+        {eyebrow}
+      </p>
+    )
+  }
+  <Tag
+    class:list={['sh__title', { 't-display': Tag === 'h1' }]}
+    id={id}
+    data-split={split ? '' : undefined}
+    data-reveal={split ? undefined : 'up'}
+    set:html={title}
+  />
+  {
+    lead && (
+      <p class="sh__lead" data-reveal="up" data-reveal-delay="0.15">
+        {lead}
+      </p>
+    )
+  }
+  <slot />
+</div>
+
+<style>
+  .sh {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-5);
+    max-width: 58rem;
+  }
+
+  .sh--center {
+    align-items: center;
+    text-align: center;
+    margin-inline: auto;
+  }
+
+  .sh--h2 .sh__title {
+    font-size: var(--fs-2xl);
+    max-width: 20ch;
+  }
+
+  .sh__lead {
+    max-width: 58ch;
+    font-size: var(--fs-md);
+    line-height: 1.7;
+    color: var(--text-muted);
+  }
+
+  .sh--center .sh__eyebrow::after {
+    content: '';
+    width: 28px;
+    height: 1px;
+    background: var(--grad-brand);
+  }
+</style>

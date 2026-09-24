@@ -10,6 +10,16 @@ gsap.registerPlugin(ScrollTrigger);
 
 export { gsap, ScrollTrigger };
 
+/** Shared motion language — every GSAP module uses these instead of ad-hoc values. */
+export const MOTION = {
+  ease: 'expo.out',
+  easeInOut: 'expo.inOut',
+  dur: 1.1,
+  durShort: 0.6,
+  distance: 40,
+  stagger: 0.08,
+} as const;
+
 const reducedQuery =
   typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 
@@ -35,24 +45,27 @@ function initReveals() {
   items.forEach((el) => {
     const kind = el.dataset.reveal || 'up';
     const delay = Number(el.dataset.revealDelay || 0);
+    const d = MOTION.distance;
     const from: gsap.TweenVars =
       kind === 'fade'
         ? { opacity: 0 }
         : kind === 'scale'
           ? { opacity: 0, scale: 0.94 }
           : kind === 'left'
-            ? { opacity: 0, x: -48 }
+            ? { opacity: 0, x: -d }
             : kind === 'right'
-              ? { opacity: 0, x: 48 }
-              : { opacity: 0, y: 48 };
+              ? { opacity: 0, x: d }
+              : { opacity: 0, y: d };
+    // GSAP owns opacity from here on; drop the CSS failsafe keyframe.
+    el.style.animation = 'none';
     gsap.fromTo(el, from, {
       opacity: 1,
       x: 0,
       y: 0,
       scale: 1,
-      duration: 1.1,
+      duration: MOTION.dur,
       delay,
-      ease: 'expo.out',
+      ease: MOTION.ease,
       scrollTrigger: { trigger: el, start: 'top 88%', once: true },
     });
   });
@@ -61,13 +74,13 @@ function initReveals() {
   gsap.utils.toArray<HTMLElement>('[data-stagger]').forEach((group) => {
     gsap.fromTo(
       group.children,
-      { opacity: 0, y: 32 },
+      { opacity: 0, y: MOTION.distance * 0.75 },
       {
         opacity: 1,
         y: 0,
-        duration: 0.9,
-        ease: 'expo.out',
-        stagger: 0.08,
+        duration: MOTION.dur,
+        ease: MOTION.ease,
+        stagger: MOTION.stagger,
         scrollTrigger: { trigger: group, start: 'top 85%', once: true },
       },
     );
@@ -98,7 +111,12 @@ export function initMotion() {
       const target = document.querySelector(id);
       if (!target) return;
       e.preventDefault();
-      lenis?.scrollTo(target as HTMLElement, { offset: -80 });
+      const el = target as HTMLElement;
+      lenis?.scrollTo(el, { offset: -80 });
+      // Move focus too, so skip links / in-page links keep keyboard order (WCAG 2.4.1).
+      if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
+      el.focus({ preventScroll: true });
+      history.replaceState(null, '', id);
     });
   });
 

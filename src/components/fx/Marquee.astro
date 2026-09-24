@@ -1,0 +1,235 @@
+---
+// Infinite ticker. CSS animation is the baseline; with JS + motion it switches to a GSAP-driven
+// loop that speeds up with scroll velocity and flips direction with scroll direction.
+// Pauses on hover/focus, toggles pause on tap (WCAG 2.2.2) and stops off-screen.
+// Reduced motion → static, wrapped list. Size via --marquee-fs on a parent.
+interface Props {
+  items: readonly string[];
+  /** Speed multiplier (1 = one loop every ~40s). */
+  speed?: number;
+  reverse?: boolean;
+  /** No border/padding of its own (the parent frames it). */
+  bare?: boolean;
+  class?: string;
+}
+
+const { items, speed = 1, reverse = false, bare = false, class: className } = Astro.props;
+const safeSpeed = speed > 0 ? speed : 1;
+// Repeat the list so a single group is always wider than the viewport.
+const reps = Math.max(2, Math.ceil(8 / Math.max(items.length, 1)));
+const group = Array.from({ length: reps }, () => items).flat();
+---
+
+<div
+  class:list={['marquee', { 'marquee--bare': bare }, className]}
+  data-marquee
+  data-speed={safeSpeed}
+  data-reverse={reverse ? '' : undefined}
+  style={`--marquee-duration: ${(40 / safeSpeed).toFixed(2)}s`}
+>
+  <ul class="sr-only">
+    {items.map((item) => <li>{item}</li>)}
+  </ul>
+  <div class:list={['marquee__track', reverse && 'is-reverse']} data-marquee-track aria-hidden="true">
+    {
+      [0, 1].map(() => (
+        <div class="marquee__group">
+          {group.map((item, i) => (
+            <span class:list={['marquee__item', i % 2 === 1 && 'is-outline', i >= items.length && 'is-repeat']}>
+              {item}
+              <svg class="marquee__node" viewBox="0 0 24 24" width="24" height="24">
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="12" cy="12" r="9" fill="none" />
+              </svg>
+            </span>
+          ))}
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<script>
+  import { gsap, ScrollTrigger, onMotionReady, prefersReducedMotion } from '@/scripts/motion';
+
+  onMotionReady(() => {
+    if (prefersReducedMotion()) return;
+
+    document.querySelectorAll<HTMLElement>('[data-marquee]').forEach((root) => {
+      const track = root.querySelector<HTMLElement>('[data-marquee-track]');
+      const first = track?.firstElementChild as HTMLElement | null;
+      if (!track || !first) return;
+
+      root.classList.add('is-js');
+      const baseDir = root.hasAttribute('data-reverse') ? -1 : 1;
+      const loopSeconds = 40 / (Number(root.dataset.speed) || 1);
+
+      let width = first.offsetWidth;
+      let x = 0;
+      let dir = 1; // flips with scroll direction
+      let boost = 0; // extra speed from scroll velocity
+      let hovered = false;
+      let tapPaused = false; // touch has no hover: a tap toggles pause instead
+      let onScreen = false;
+      let speedFactor = 1; // eases to 0 on hover/focus, back to 1 on leave
+
+      const setX = gsap.quickSetter(track, 'x', 'px');
+
+      const tick = (_t: number, dt: number) => {
+        if (!onScreen || !width) return;
+        const pxPerMs = width / (loopSeconds * 1000);
+        const target = hovered || tapPaused ? 0 : 1;
+        speedFactor += (target - speedFactor) * 0.08;
+        x -= pxPerMs * dt * baseDir * dir * speedFactor * (1 + boost);
+        boost *= 0.92;
+        // wrap into (-width, 0]
+        x = ((x % width) - width) % width;
+        setX(x);
+      };
+
+      gsap.ticker.add(tick);
+
+      ScrollTrigger.create({
+        trigger: root,
+        start: 'top bottom',
+        end: 'bottom top',
+        onUpdate: (self) => {
+          dir = self.direction;
+          boost = Math.min(Math.abs(self.getVelocity()) / 250, 6);
+        },
+      });
+
+      root.addEventListener('pointerenter', (e) => {
+        if (e.pointerType === 'mouse') hovered = true;
+      });
+      root.addEventListener('pointerleave', (e) => {
+        if (e.pointerType === 'mouse') hovered = false;
+      });
+      root.addEventListener('pointerup', (e) => {
+        if (e.pointerType === 'mouse') return;
+        tapPaused = !tapPaused;
+        root.classList.toggle('is-paused', tapPaused);
+      });
+      root.addEventListener('focusin', () => (hovered = true));
+      root.addEventListener('focusout', () => (hovered = false));
+
+      new IntersectionObserver(([entry]) => (onScreen = entry.isIntersecting)).observe(root);
+      new ResizeObserver(() => (width = first.offsetWidth)).observe(first);
+    });
+  });
+</script>
+
+<style>
+  .marquee {
+    position: relative;
+    overflow: hidden;
+    padding-block: var(--sp-5);
+    border-block: 1px solid var(--line);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  }
+
+  .marquee__track {
+    display: flex;
+    width: max-content;
+    animation: marquee var(--marquee-duration, 40s) linear infinite;
+    will-change: transform;
+  }
+
+  .marquee__track.is-reverse {
+    animation-direction: reverse;
+  }
+
+  .marquee--bare {
+    padding-block: 0;
+    border-block: 0;
+  }
+
+  .marquee:hover .marquee__track,
+  .marquee:focus-within .marquee__track {
+    animation-play-state: paused;
+  }
+
+  /* JS drives the transform instead. */
+  .marquee.is-js .marquee__track {
+    animation: none;
+  }
+
+  .marquee__group {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .marquee__item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-6);
+    padding-right: var(--sp-6);
+    font-family: var(--font-heading);
+    font-size: var(--marquee-fs, var(--fs-2xl));
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+    color: var(--text);
+  }
+
+  .marquee__item.is-outline {
+    color: transparent;
+    -webkit-text-stroke: 1px var(--text-dim);
+  }
+
+  .marquee__node {
+    width: 0.5em;
+    height: 0.5em;
+    flex-shrink: 0;
+    fill: var(--c-cyan);
+    stroke: var(--c-cyan);
+    stroke-width: 1;
+  }
+
+  .marquee__item.is-outline .marquee__node {
+    fill: var(--c-magenta);
+    stroke: var(--c-magenta);
+  }
+
+  .marquee__node circle + circle {
+    fill: none;
+    opacity: 0.45;
+  }
+
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* Reduced motion: no movement, show the list once, wrapped. */
+  @media (prefers-reduced-motion: reduce) {
+    .marquee {
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+
+    .marquee__track {
+      animation: none;
+      width: auto;
+      padding-inline: var(--gutter);
+    }
+
+    .marquee__group {
+      flex-wrap: wrap;
+      row-gap: var(--sp-3);
+    }
+
+    .marquee__group + .marquee__group,
+    .marquee__item.is-repeat {
+      display: none;
+    }
+
+    .marquee__item {
+      font-size: min(var(--marquee-fs, var(--fs-xl)), var(--fs-xl));
+      white-space: normal;
+    }
+  }
+</style>

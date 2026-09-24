@@ -29,6 +29,14 @@ html.lenis body {
   scroll-behavior: auto !important;
 }
 
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
 body {
   min-height: 100dvh;
   background: var(--bg);
@@ -87,6 +95,11 @@ p {
   color: var(--c-white);
 }
 
+/* Programmatic focus targets (skip link, in-page anchors) don't need a ring. */
+[tabindex='-1']:focus {
+  outline: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 3px;
@@ -129,6 +142,18 @@ p {
   color: transparent;
 }
 
+.section--tight {
+  padding-top: var(--sp-8);
+}
+
+/* Display title — hero-scale headings share one voice. */
+.t-display {
+  font-size: var(--fs-hero);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  max-width: 14ch;
+}
+
 .muted {
   color: var(--text-muted);
 }
@@ -165,6 +190,14 @@ p {
    <html> gets .js on boot; reduced-motion users never see hidden content. */
 html.js:not(.reduced-motion) [data-reveal] {
   opacity: 0;
+  /* Failsafe: if the motion bundle never runs, content still appears. motion.ts clears this. */
+  animation: reveal-failsafe 0s linear 4s forwards;
+}
+
+@keyframes reveal-failsafe {
+  to {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,0 +1,215 @@
+---
+/**
+ * Glass card with a 1px gradient border (mask), a radial spotlight that follows the
+ * pointer and an optional subtle 3D tilt. Pointer effects are skipped on touch
+ * devices and with reduced motion; without JS the card is simply static.
+ */
+interface Props {
+  as?: 'article' | 'div' | 'li';
+  class?: string;
+  tilt?: boolean;
+  /** Remove the body's default padding/gap (the consumer lays out its own content). */
+  flush?: boolean;
+  [attr: string]: unknown;
+}
+
+const { as: Tag = 'div', class: className, tilt = false, flush = false, ...rest } = Astro.props;
+---
+
+<Tag class:list={['glow-card', flush && 'glow-card--flush', className]} data-glow-card data-tilt={tilt ? '' : undefined} {...rest}>
+  <div class="glow-card__surface">
+    <span class="glow-card__spot" aria-hidden="true"></span>
+    <div class="glow-card__body">
+      <slot />
+    </div>
+  </div>
+</Tag>
+
+<style>
+  /* Outer element is left free for layout and reveal tweens (GSAP writes its
+     transform); all visuals + tilt live on the inner surface. */
+  .glow-card {
+    --mx: 50%;
+    --my: 0%;
+    --rx: 0deg;
+    --ry: 0deg;
+    --spot: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    perspective: 900px;
+  }
+
+  .glow-card__surface {
+    position: relative;
+    isolation: isolate;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--r-lg);
+    background: var(--bg-elev);
+    -webkit-backdrop-filter: blur(16px) saturate(130%);
+    backdrop-filter: blur(16px) saturate(130%);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--c-white) 6%, transparent);
+    transform: rotateX(var(--rx)) rotateY(var(--ry));
+    transition:
+      transform var(--dur-slow) var(--ease-out),
+      box-shadow var(--dur) var(--ease-out);
+  }
+
+  /* Base 1px gradient border. */
+  .glow-card__surface::before,
+  .glow-card__surface::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+
+  .glow-card__surface::before {
+    background: var(--grad-border);
+    opacity: 0.7;
+    transition: opacity var(--dur) var(--ease-out);
+  }
+
+  /* Border highlight that brightens next to the pointer. */
+  .glow-card__surface::after {
+    background: radial-gradient(
+      260px circle at var(--mx) var(--my),
+      var(--c-cyan),
+      color-mix(in srgb, var(--c-magenta) 70%, transparent) 40%,
+      transparent 70%
+    );
+    opacity: var(--spot);
+    transition: opacity var(--dur) var(--ease-out);
+  }
+
+  /* Interior spotlight, clipped to the card. */
+  .glow-card__spot {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: var(--spot);
+    background: radial-gradient(
+      420px circle at var(--mx) var(--my),
+      color-mix(in srgb, var(--c-cyan) 13%, transparent),
+      color-mix(in srgb, var(--c-magenta) 6%, transparent) 45%,
+      transparent 70%
+    );
+    transition: opacity var(--dur) var(--ease-out);
+  }
+
+  .glow-card__body {
+    position: relative;
+    flex: 1;
+    border-radius: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    padding: clamp(var(--sp-5), 1rem + 2vw, var(--sp-7));
+  }
+
+  .glow-card--flush .glow-card__body {
+    gap: 0;
+    padding: 0;
+  }
+
+  .glow-card:is(:hover, :focus-within) {
+    --spot: 1;
+  }
+
+  .glow-card:is(:hover, :focus-within) .glow-card__surface {
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--c-white) 10%, transparent),
+      0 24px 60px -24px color-mix(in srgb, var(--c-cyan) 22%, transparent);
+  }
+
+  .glow-card:is(:hover, :focus-within) .glow-card__surface::before {
+    opacity: 1;
+  }
+
+  /* While the pointer moves, tilt follows it quickly; on leave it eases back. */
+  .glow-card.is-tracking .glow-card__surface {
+    transition:
+      transform var(--dur) var(--ease-out),
+      box-shadow var(--dur) var(--ease-out);
+  }
+
+  /* No sticky-hover glow on touch; keyboard focus still lights the card. */
+  @media (hover: none), (pointer: coarse) {
+    .glow-card:hover:not(:focus-within) {
+      --spot: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glow-card__surface {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  import { onMotionReady, prefersReducedMotion, isTouch } from '@/scripts/motion';
+
+  const MAX_TILT = 3; // degrees — corporate, not playful
+
+  function bind(card: HTMLElement) {
+    if (card.dataset.glowBound) return;
+    card.dataset.glowBound = '';
+    const tilt = card.hasAttribute('data-tilt');
+    let frame = 0;
+    let px = 0;
+    let py = 0;
+
+    const apply = () => {
+      frame = 0;
+      const r = card.getBoundingClientRect();
+      const x = px - r.left;
+      const y = py - r.top;
+      card.style.setProperty('--mx', `${x}px`);
+      card.style.setProperty('--my', `${y}px`);
+      if (tilt) {
+        const nx = x / r.width - 0.5;
+        const ny = y / r.height - 0.5;
+        card.style.setProperty('--rx', `${(-ny * MAX_TILT * 2).toFixed(2)}deg`);
+        card.style.setProperty('--ry', `${(nx * MAX_TILT * 2).toFixed(2)}deg`);
+      }
+    };
+
+    card.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      px = e.clientX;
+      py = e.clientY;
+      card.classList.add('is-tracking');
+      if (!frame) frame = requestAnimationFrame(apply);
+    });
+
+    card.addEventListener('pointerleave', () => {
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+      card.classList.remove('is-tracking');
+      if (tilt) {
+        card.style.setProperty('--rx', '0deg');
+        card.style.setProperty('--ry', '0deg');
+      }
+    });
+  }
+
+  onMotionReady(() => {
+    if (prefersReducedMotion() || isTouch()) return;
+    document.querySelectorAll<HTMLElement>('[data-glow-card]').forEach(bind);
+  });
+</script>

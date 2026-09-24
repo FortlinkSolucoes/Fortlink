@@ -1,0 +1,56 @@
+---
+// Boots global text/interaction effects. Add once to BaseLayout (after <Footer />).
+// - [data-split] headings: masked reveals (waits for the preloader when there is one).
+// - [data-magnetic]: pointer attraction.
+---
+
+<script>
+  import { onMotionReady } from '@/scripts/motion';
+  import { initSplitHeadings } from '@/scripts/split';
+  import { initMagnetic } from '@/scripts/magnetic';
+
+  const preloaderPending = () =>
+    !!document.querySelector('[data-preloader]') &&
+    !document.documentElement.classList.contains('preloader-done');
+
+  onMotionReady(() => {
+    initMagnetic();
+    if (preloaderPending()) {
+      window.addEventListener('preloader:done', () => initSplitHeadings(), { once: true });
+    } else {
+      initSplitHeadings();
+    }
+  });
+</script>
+
+<style is:global>
+  /* Hide split headings until they are split (prevents a flash of unmasked text).
+     Only when JS + motion are on; a delayed keyframe is the failsafe if scripts never run. */
+  html.js:not(.reduced-motion) [data-split]:not(.is-split) {
+    visibility: hidden;
+    animation: split-failsafe 0s linear 3.5s forwards;
+  }
+
+  @keyframes split-failsafe {
+    to {
+      visibility: visible;
+    }
+  }
+
+  [data-split] .split-line {
+    padding-bottom: 0.08em; /* keeps descenders (g, p, ç) inside the mask */
+    margin-bottom: -0.08em;
+  }
+
+  [data-split] .split-char {
+    will-change: transform, opacity;
+  }
+
+  /* Gradient text survives char/word splitting (transformed children break parent background-clip). */
+  [data-split] .text-gradient :is(.split-char, div) {
+    background: var(--grad-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+</style>

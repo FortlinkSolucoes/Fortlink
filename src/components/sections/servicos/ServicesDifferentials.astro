@@ -1,0 +1,157 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { differentials } from '@/data/site';
+---
+
+<section class="section diff" data-svc-diff>
+  <div class="container diff__wrap">
+    <div class="diff__aside">
+      <div class="diff__sticky">
+        <SectionHeading
+          eyebrow="Diferenciais"
+          title={'Por que empresas escolhem a <span class="text-gradient">FortLink</span>'}
+        />
+      </div>
+    </div>
+
+    <ol class="diff__list">
+      {
+        differentials.map((d, i) => (
+          <li class="diff__row" data-diff-row>
+            <span class="diff__line" aria-hidden="true">
+              <span class="diff__line-fill" data-diff-fill />
+            </span>
+            <span class="diff__num" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <div class="diff__body">
+              <h3 class="diff__title">{d.title}</h3>
+              <p class="diff__text">{d.text}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .diff {
+    overflow: clip;
+  }
+
+  .diff__wrap {
+    display: grid;
+    gap: var(--sp-8);
+  }
+
+  .diff__sticky {
+    display: grid;
+    gap: var(--sp-6);
+  }
+
+  .diff__list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .diff__row {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: var(--sp-5) var(--sp-6);
+    padding-block: var(--sp-7);
+  }
+
+  .diff__line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .diff__line-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--grad-brand);
+    transform-origin: left center;
+    box-shadow: var(--glow-sm);
+    opacity: 0.35;
+  }
+
+  .diff__row:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* Outlined numeral; the stroke lights up on hover. */
+  .diff__num {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 2rem + 5vw, 7rem);
+    line-height: 0.9;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--line-strong);
+    transition: -webkit-text-stroke-color var(--dur) var(--ease-out);
+  }
+
+  .diff__row:hover .diff__num {
+    -webkit-text-stroke-color: var(--c-cyan);
+  }
+
+  .diff__body {
+    display: grid;
+    gap: var(--sp-3);
+    padding-top: var(--sp-2);
+  }
+
+  .diff__title {
+    font-size: var(--fs-xl);
+  }
+
+  .diff__text {
+    color: var(--text-muted);
+    font-size: var(--fs-md);
+    max-width: 40ch;
+  }
+
+  @media (min-width: 960px) {
+    .diff__wrap {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--sp-9);
+    }
+
+    .diff__sticky {
+      position: sticky;
+      top: calc(var(--header-h) + var(--sp-7));
+    }
+
+    .diff__row {
+      grid-template-columns: 9rem minmax(0, 1fr);
+      padding-block: var(--sp-8);
+    }
+  }
+</style>
+
+<script>
+  import { gsap, onMotionReady, prefersReducedMotion, MOTION } from '@/scripts/motion';
+
+  onMotionReady(() => {
+    if (prefersReducedMotion()) return;
+    document.querySelectorAll<HTMLElement>('[data-svc-diff] [data-diff-row]').forEach((row) => {
+      const fill = row.querySelector('[data-diff-fill]');
+      const num = row.querySelector('.diff__num');
+      const body = row.querySelector('.diff__body');
+      const tl = gsap.timeline({ scrollTrigger: { trigger: row, start: 'top 80%', once: true } });
+      const d = MOTION.distance;
+      tl.fromTo(fill, { scaleX: 0, opacity: 1 }, { scaleX: 1, opacity: 1, duration: 1.4, ease: MOTION.easeInOut })
+        .fromTo(num, { opacity: 0, x: -d }, { opacity: 1, x: 0, duration: MOTION.dur, ease: MOTION.ease }, 0.25)
+        .fromTo(body, { opacity: 0, y: d * 0.75 }, { opacity: 1, y: 0, duration: MOTION.dur, ease: MOTION.ease }, 0.4)
+        // Fill fades back to a hairline so the glow is only an arrival accent.
+        .to(fill, { opacity: 0.35, duration: MOTION.dur, ease: MOTION.ease }, 1.4);
+    });
+  });
+</script>

@@ -21,7 +21,7 @@
   --bg-elev-solid: #120a2e;
   --text: #f4f2ff;
   --text-muted: #a9a4cf;
-  --text-dim: #6f6a98;
+  --text-dim: #8680b0; /* ≥ 5:1 on --bg, AA for small text */
   --line: rgba(207, 204, 236, 0.12);
   --line-strong: rgba(207, 204, 236, 0.24);
   --accent: var(--c-cyan);
@@ -34,6 +34,9 @@
   --grad-border: linear-gradient(140deg, rgba(59, 202, 230, 0.6), rgba(70, 94, 186, 0.15) 40%, rgba(192, 79, 214, 0.6));
   --glow-cyan: 0 0 24px rgba(59, 202, 230, 0.35), 0 0 64px rgba(59, 202, 230, 0.15);
   --glow-magenta: 0 0 24px rgba(192, 79, 214, 0.35), 0 0 64px rgba(192, 79, 214, 0.15);
+  /* Small, quiet halo for dots/nodes/indicators. Reserve --glow-cyan for the primary CTA hover
+     and at most one hero element per viewport. */
+  --glow-sm: 0 0 8px color-mix(in srgb, var(--c-cyan) 35%, transparent);
 
   /* Typography */
   --font-display: 'Michroma', 'Sora Variable', system-ui, sans-serif; /* wide techno — logo, eyebrows, small caps labels */
@@ -63,6 +66,7 @@
   --section-y: clamp(5rem, 3rem + 8vw, 10rem);
   --gutter: clamp(1rem, 0.5rem + 3vw, 3rem);
   --container: 1240px;
+  --head-gap: var(--sp-8); /* section heading → content */
 
   /* Radius */
   --r-sm: 8px;
@@ -87,5 +91,8 @@
   --z-loader: 100;
 
   --header-h: 76px;
+
+  /* Breakpoints (custom properties can't be used in @media — keep these literal values):
+     640px (sm) · 960px (md) · 1280px (lg). 1024px only for the pinned horizontal services. */
   color-scheme: dark;
 }

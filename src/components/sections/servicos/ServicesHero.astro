@@ -1,0 +1,376 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { site, services } from '@/data/site';
+
+type Pt = readonly [number, number];
+
+// PCB-style traces (orthogonal + 45° bends) in a 1440×800 viewBox, weighted to the right
+// so the heading on the left stays calm.
+const traces: readonly (readonly Pt[])[] = [
+  [[0, 120], [320, 120], [380, 180], [620, 180], [660, 140], [900, 140]],
+  [[1440, 90], [1180, 90], [1120, 150], [980, 150], [940, 110], [860, 110]],
+  [[1440, 260], [1260, 260], [1200, 320], [1020, 320], [960, 380], [960, 520]],
+  [[720, 0], [720, 80], [780, 140], [860, 140], [860, 220], [920, 280], [1100, 280]],
+  [[1440, 460], [1320, 460], [1260, 520], [1120, 520], [1080, 480], [960, 480]],
+  [[1440, 640], [1220, 640], [1160, 700], [900, 700], [840, 640], [700, 640]],
+  [[0, 700], [180, 700], [240, 640], [420, 640], [480, 700], [560, 700]],
+  [[1180, 800], [1180, 700], [1240, 640], [1360, 640], [1360, 560]],
+  [[1000, 0], [1000, 40], [1060, 100], [1240, 100], [1280, 60], [1440, 60]],
+  [[0, 420], [80, 420], [140, 360], [220, 360]],
+  [[860, 800], [860, 740], [920, 680], [1040, 680], [1100, 620], [1280, 620]],
+  [[1440, 360], [1340, 360], [1300, 400], [1300, 440]],
+];
+
+const toD = (pts: readonly Pt[]) => 'M' + pts.map(([x, y]) => `${x} ${y}`).join(' L');
+
+// Deterministic timings so the "data pulses" never sync up.
+const paths = traces.map((pts, i) => ({
+  d: toD(pts),
+  end: pts[pts.length - 1],
+  dur: 5 + ((i * 7) % 6),
+  delay: -((i * 1.9) % 7),
+  hot: i % 3 !== 1,
+}));
+
+// Solder pads on a few bends for texture.
+const pads: readonly Pt[] = [
+  [620, 180], [1120, 150], [1200, 320], [860, 220], [1260, 520], [1160, 700], [240, 640], [1060, 100],
+];
+
+const total = String(services.length).padStart(2, '0');
+---
+
+<section class="hero" data-svc-hero>
+  <div class="hero__bg" aria-hidden="true">
+    <div class="hero__grid"></div>
+    <div class="hero__grid hero__grid--lit"></div>
+    <svg
+      class="hero__circuit"
+      viewBox="0 0 1440 800"
+      preserveAspectRatio="xMidYMid slice"
+      focusable="false"
+      data-svc-circuit
+    >
+      <defs>
+        <linearGradient id="svc-hero-pulse" x1="0" y1="0" x2="1440" y2="800" gradientUnits="userSpaceOnUse">
+          <stop offset="0" style="stop-color: var(--c-cyan)"></stop>
+          <stop offset="0.5" style="stop-color: var(--c-blue)"></stop>
+          <stop offset="1" style="stop-color: var(--c-magenta)"></stop>
+        </linearGradient>
+      </defs>
+      <g class="hero__traces">
+        {paths.map((p) => <path d={p.d} />)}
+      </g>
+      <g class="hero__pads">
+        {pads.map(([x, y]) => <rect x={x - 4} y={y - 4} width="8" height="8" rx="1.5" />)}
+      </g>
+      <g class="hero__pulses">
+        {
+          paths
+            .filter((p) => p.hot)
+            .map((p) => (
+              <g style={`--dur:${p.dur}s;--delay:${p.delay}s`}>
+                <path class="pulse pulse--halo" d={p.d} pathLength="100" />
+                <path class="pulse" d={p.d} pathLength="100" />
+                <circle class="node node--flash" cx={p.end[0]} cy={p.end[1]} r="4" />
+              </g>
+            ))
+        }
+      </g>
+      <g class="hero__nodes">
+        {paths.filter((p) => !p.hot).map((p) => <circle class="node" cx={p.end[0]} cy={p.end[1]} r="3.5" />)}
+      </g>
+    </svg>
+    <div class="hero__fade"></div>
+  </div>
+
+  <div class="container hero__content" data-svc-hero-content>
+    <div class="hero__heading">
+      <SectionHeading
+        as="h1"
+        eyebrow="Operação sempre conectada"
+        title={'Nossos <span class="text-gradient">serviços</span>'}
+        lead={site.description}
+      />
+    </div>
+
+    <div class="hero__meta" data-reveal="up" data-reveal-delay="0.2">
+      <p class="hero__stat">
+        <span class="hero__stat-num" aria-hidden="true">{total}</span>
+        <span class="hero__stat-label">
+          <span class="sr-only">{services.length}</span> soluções integradas para a sua empresa não parar
+        </span>
+      </p>
+    </div>
+
+    <a class="hero__cue" href="/servicos/#portfolio" data-svc-link="portfolio" data-cursor="Ver">
+      <span>Explorar serviços</span>
+      <span class="hero__cue-icon"><Icon name="arrow-right" size={16} /></span>
+    </a>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: flex-end;
+    min-height: min(100svh, 920px);
+    padding-top: calc(var(--header-h) + var(--sp-9));
+    padding-bottom: var(--sp-9);
+    overflow: hidden;
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-bg);
+    pointer-events: none;
+  }
+
+  /* Technical grid: base layer + a cyan copy revealed around the pointer. */
+  .hero__grid {
+    position: absolute;
+    inset: 0;
+    --cell: 56px;
+    background-image:
+      linear-gradient(to right, var(--line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+    background-size: var(--cell) var(--cell);
+    background-position: center top;
+    mask-image: radial-gradient(ellipse 90% 80% at 70% 40%, #000 20%, transparent 75%);
+    opacity: 0.55;
+  }
+
+  .hero__grid--lit {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--c-cyan) 45%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--c-magenta) 40%, transparent) 1px, transparent 1px);
+    mask-image: radial-gradient(circle 260px at var(--hx, 72%) var(--hy, 38%), #000, transparent 70%);
+    opacity: 0;
+    transition: opacity var(--dur-slow) var(--ease-out);
+  }
+
+  .hero[data-lit] .hero__grid--lit {
+    opacity: 0.7;
+  }
+
+  .hero__circuit {
+    position: absolute;
+    inset: -4% -2%;
+    width: 104%;
+    height: 108%;
+    max-width: none;
+  }
+
+  .hero__traces path {
+    fill: none;
+    stroke: var(--line-strong);
+    stroke-width: 1.25;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  .hero__pads rect {
+    fill: var(--bg);
+    stroke: var(--line-strong);
+    stroke-width: 1.25;
+  }
+
+  .node {
+    fill: var(--bg);
+    stroke: var(--c-cyan);
+    stroke-width: 1.5;
+    opacity: 0.55;
+  }
+
+  /* Data pulse: one short dash travels the path. Resting state is off-path,
+     so with reduced motion the traces simply stay static. */
+  .pulse {
+    fill: none;
+    stroke: url(#svc-hero-pulse);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 10 112;
+    stroke-dashoffset: 12;
+    animation: svc-pulse var(--dur) linear var(--delay) infinite;
+  }
+
+  .pulse--halo {
+    stroke-width: 7;
+    opacity: 0.22;
+  }
+
+  .node--flash {
+    stroke: var(--c-magenta);
+    animation: svc-node var(--dur) linear var(--delay) infinite;
+  }
+
+  .hero[data-paused] :is(.pulse, .node--flash) {
+    animation-play-state: paused;
+  }
+
+  @keyframes svc-pulse {
+    to {
+      stroke-dashoffset: -100;
+    }
+  }
+
+  @keyframes svc-node {
+    0%,
+    84%,
+    100% {
+      opacity: 0.4;
+      fill: var(--bg);
+    }
+    91% {
+      opacity: 1;
+      fill: var(--c-pink);
+    }
+  }
+
+  .hero__fade {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 55% at 12% 78%, var(--bg) 10%, transparent 70%),
+      linear-gradient(to bottom, transparent 55%, var(--bg) 100%);
+  }
+
+  .hero__content {
+    position: relative;
+    display: grid;
+    gap: var(--sp-7);
+  }
+
+  .hero__heading {
+    max-width: 60rem;
+  }
+
+  .hero__meta {
+    display: grid;
+    gap: var(--sp-6);
+    padding-top: var(--sp-6);
+    border-top: 1px solid var(--line);
+  }
+
+  .hero__stat {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    max-width: 26rem;
+  }
+
+  .hero__stat-num {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    line-height: 1;
+    background: var(--grad-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero__stat-label {
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+  }
+
+  .hero__cue {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-3);
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .hero__cue-icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    transform: rotate(90deg);
+    transition:
+      border-color var(--dur) var(--ease-out),
+      transform var(--dur) var(--ease-out);
+  }
+
+  .hero__cue:hover .hero__cue-icon,
+  .hero__cue:focus-visible .hero__cue-icon {
+    border-color: var(--c-cyan);
+    transform: rotate(90deg) translateX(4px);
+  }
+
+  @media (max-width: 640px) {
+    .hero__grid {
+      --cell: 40px;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, onMotionReady, prefersReducedMotion, isTouch } from '@/scripts/motion';
+
+  onMotionReady(() => {
+    const hero = document.querySelector<HTMLElement>('[data-svc-hero]');
+    if (!hero) return;
+
+    // Pause the CSS pulses when the hero is off-screen or the tab is hidden.
+    let visible = true;
+    const sync = () => hero.toggleAttribute('data-paused', !visible || document.hidden);
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      sync();
+    }).observe(hero);
+    document.addEventListener('visibilitychange', sync);
+
+    if (prefersReducedMotion()) return;
+
+    const circuit = hero.querySelector<SVGElement>('[data-svc-circuit]');
+    const content = hero.querySelector<HTMLElement>('[data-svc-hero-content]');
+
+    // Scroll depth: circuit drifts slower than the copy.
+    gsap.to(circuit, {
+      yPercent: 12,
+      ease: 'none',
+      scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true },
+    });
+    gsap.to(content, {
+      yPercent: -8,
+      opacity: 0.25,
+      ease: 'none',
+      scrollTrigger: { trigger: hero, start: 'center center', end: 'bottom top', scrub: true },
+    });
+
+    if (isTouch() || !circuit) return;
+
+    // Pointer: grid spotlight + subtle circuit parallax.
+    const moveX = gsap.quickTo(circuit, 'x', { duration: 1.2, ease: 'power3.out' });
+    const moveY = gsap.quickTo(circuit, 'y', { duration: 1.2, ease: 'power3.out' });
+    hero.addEventListener('pointermove', (e) => {
+      const r = hero.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      hero.style.setProperty('--hx', `${px * 100}%`);
+      hero.style.setProperty('--hy', `${py * 100}%`);
+      hero.setAttribute('data-lit', '');
+      moveX((px - 0.5) * -18);
+      moveY((py - 0.5) * -12);
+    });
+    hero.addEventListener('pointerleave', () => {
+      hero.removeAttribute('data-lit');
+      moveX(0);
+      moveY(0);
+    });
+  });
+</script>

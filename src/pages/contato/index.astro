@@ -1,0 +1,57 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ContactIntro from '@/components/sections/contato/ContactIntro.astro';
+import ContactForm from '@/components/sections/contato/ContactForm.astro';
+import ContactMap from '@/components/sections/contato/ContactMap.astro';
+import { site } from '@/data/site';
+
+// The page itself is the call to action, so the footer skips its big CTA.
+const description = `Fale com a ${site.name}: orçamento de infraestrutura de TI, redes, cabeamento, CFTV, firewall e monitoramento em ${site.address.city} - ${site.address.state}. Atendimento pelo WhatsApp ou e-mail.`;
+---
+
+<BaseLayout title="Contato" description={description} footerCta={false}>
+  <section class="section contact" aria-labelledby="contato-titulo">
+    <div class="contact__glow" aria-hidden="true"></div>
+    <div class="container contact__grid">
+      <ContactIntro />
+      <ContactForm />
+    </div>
+  </section>
+  <ContactMap />
+</BaseLayout>
+
+<style>
+  .contact {
+    padding-top: calc(var(--header-h) + var(--sp-8));
+    isolation: isolate;
+    overflow: clip;
+  }
+
+  /* Soft neon haze + technical grid behind the split layout. */
+  .contact__glow {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-bg);
+    pointer-events: none;
+    background:
+      radial-gradient(40rem 28rem at 12% 18%, color-mix(in srgb, var(--c-cyan) 14%, transparent), transparent 70%),
+      radial-gradient(44rem 32rem at 92% 70%, color-mix(in srgb, var(--c-magenta) 14%, transparent), transparent 70%),
+      linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 64px 64px,
+      linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 64px 64px;
+    mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 78%);
+    opacity: 0.7;
+  }
+
+  .contact__grid {
+    display: grid;
+    gap: var(--sp-8);
+    align-items: start;
+  }
+
+  @media (min-width: 960px) {
+    .contact__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      gap: clamp(var(--sp-7), 6vw, var(--sp-10));
+    }
+  }
+</style>

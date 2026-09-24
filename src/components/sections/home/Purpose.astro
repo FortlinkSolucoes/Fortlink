@@ -1,0 +1,130 @@
+---
+import { about, values } from '@/data/site';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import GlowCard from '@/components/ui/GlowCard.astro';
+
+const pillars = [
+  { label: 'Missão', text: about.mission },
+  { label: 'Visão', text: about.vision },
+];
+---
+
+<section class="purpose section" id="proposito">
+  <div class="container">
+    <SectionHeading eyebrow="Propósito" title='O que nos <span class="text-gradient">move</span>.' split={false} />
+
+    <div class="purpose__pillars">
+      {
+        pillars.map((p, i) => (
+          <GlowCard as="article" class="purpose__card" data-reveal="scale" data-reveal-delay={String(i * 0.12)}>
+            <h3 class="purpose__label">{p.label}</h3>
+            <p class="purpose__text">{p.text}</p>
+          </GlowCard>
+        ))
+      }
+    </div>
+
+    <div class="values">
+      <h3 class="values__title eyebrow" data-reveal="fade">Nossos valores</h3>
+      <!-- One continuous line of values, joined by circuit nodes like a trace. -->
+      <ul class="values__line" role="list" data-reveal="fade">
+        {
+          values.map((v) => (
+            <li class="values__item">
+              <span class="values__name">{v}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .purpose__pillars {
+    margin-top: var(--head-gap);
+    display: grid;
+    gap: var(--sp-4);
+  }
+
+  .purpose__pillars :global(.purpose__card) {
+    min-height: 100%;
+  }
+
+  .purpose__label {
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+    font-weight: 400;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .purpose__text {
+    font-family: var(--font-heading);
+    font-size: var(--fs-xl);
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  .values {
+    margin-top: var(--sp-9);
+    display: grid;
+    gap: var(--sp-6);
+  }
+
+  .values__title {
+    font-weight: 400;
+    letter-spacing: 0.22em;
+  }
+
+  .values__line {
+    list-style: none;
+    padding: var(--sp-6) 0 0;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: var(--sp-3);
+  }
+
+  .values__item {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Node + short trace between words (none after the last one). */
+  .values__item:not(:last-child)::after {
+    content: '';
+    flex: none;
+    width: clamp(1.5rem, 1rem + 2vw, 3rem);
+    height: 7px;
+    margin-inline: var(--sp-3);
+    background:
+      radial-gradient(circle at 50% 50%, var(--c-cyan) 0 2.5px, transparent 3px),
+      linear-gradient(var(--line-strong), var(--line-strong)) center / 100% 1px no-repeat;
+  }
+
+  .values__name {
+    font-family: var(--font-heading);
+    font-size: var(--fs-xl);
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--text-muted);
+    transition: color var(--dur) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .values__item:hover .values__name {
+      color: var(--text);
+    }
+  }
+
+  @media (min-width: 640px) {
+    .purpose__pillars {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

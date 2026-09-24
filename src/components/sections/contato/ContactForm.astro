@@ -1,0 +1,565 @@
+---
+import Button from '@/components/ui/Button.astro';
+import { site, services } from '@/data/site';
+
+// Without JS the form falls back to a plain mailto submission.
+const fallbackAction = `mailto:${site.email}?subject=${encodeURIComponent('Contato pelo site')}`;
+---
+
+<div class="panel" data-contact-panel data-state="idle" data-reveal="right">
+  <div class="panel__inner">
+    <form
+      class="form"
+      action={fallbackAction}
+      method="post"
+      enctype="text/plain"
+      aria-labelledby="form-titulo"
+      data-contact-form
+    >
+      <header class="form__head">
+        <h2 id="form-titulo" class="form__title">Solicite um orçamento</h2>
+        <p class="form__hint">
+          Campos com <span aria-hidden="true">*</span><span class="sr-only">asterisco</span> são obrigatórios.
+        </p>
+      </header>
+
+      <p class="form__summary" role="alert" data-form-summary></p>
+
+      <div class="form__grid">
+        <div class="field">
+          <input
+            class="field__control"
+            id="f-nome"
+            name="nome"
+            type="text"
+            autocomplete="name"
+            placeholder=" "
+            required
+            maxlength="120"
+            data-error-required="Informe seu nome."
+          />
+          <label class="field__label" for="f-nome">Nome <span class="field__req" aria-hidden="true">*</span></label>
+          <p class="field__error" id="f-nome-error"></p>
+        </div>
+
+        <div class="field">
+          <input
+            class="field__control"
+            id="f-empresa"
+            name="empresa"
+            type="text"
+            autocomplete="organization"
+            placeholder=" "
+            required
+            maxlength="120"
+            data-error-required="Informe o nome da empresa."
+          />
+          <label class="field__label" for="f-empresa">Empresa <span class="field__req" aria-hidden="true">*</span></label>
+          <p class="field__error" id="f-empresa-error"></p>
+        </div>
+
+        <div class="field">
+          <input
+            class="field__control"
+            id="f-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            inputmode="email"
+            placeholder=" "
+            maxlength="160"
+            data-error-format="Informe um e-mail válido, como nome@empresa.com.br."
+          />
+          <label class="field__label" for="f-email">E-mail</label>
+          <p class="field__error" id="f-email-error"></p>
+        </div>
+
+        <div class="field">
+          <input
+            class="field__control"
+            id="f-telefone"
+            name="telefone"
+            type="tel"
+            autocomplete="tel-national"
+            inputmode="tel"
+            placeholder=" "
+            maxlength="16"
+            aria-describedby="f-telefone-hint"
+            data-phone
+            data-error-format="Informe o telefone com DDD, como (45) 99999-9999."
+          />
+          <label class="field__label" for="f-telefone">Telefone / WhatsApp</label>
+          <p class="field__help" id="f-telefone-hint">Com DDD.</p>
+          <p class="field__error" id="f-telefone-error"></p>
+        </div>
+
+        <div class="field field--full field--select">
+          <select class="field__control" id="f-servico" name="servico">
+            <option value="">Ainda não sei / quero orientação</option>
+            {services.map((s) => <option value={s.title}>{s.title}</option>)}
+            <option value="Outro">Outro</option>
+          </select>
+          <label class="field__label" for="f-servico">Serviço de interesse</label>
+          <svg class="field__chevron" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path
+              d="M6 9l6 6 6-6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </div>
+
+        <div class="field field--full">
+          <textarea
+            data-lenis-prevent
+            class="field__control field__control--area"
+            id="f-mensagem"
+            name="mensagem"
+            rows="5"
+            placeholder=" "
+            required
+            minlength="10"
+            maxlength="2000"
+            data-error-required="Escreva uma mensagem contando o que você precisa."
+            data-error-short="Conte um pouco mais: pelo menos 10 caracteres."></textarea>
+          <label class="field__label" for="f-mensagem">
+            Mensagem <span class="field__req" aria-hidden="true">*</span>
+          </label>
+          <p class="field__error" id="f-mensagem-error"></p>
+        </div>
+      </div>
+
+      <div class="form__actions">
+        <span class="form__action" data-channel="whatsapp">
+          <Button type="submit" variant="primary" icon="whatsapp" magnetic>Enviar pelo WhatsApp</Button>
+        </span>
+        <span class="form__action" data-channel="email">
+          <Button type="submit" variant="ghost" icon="mail">Enviar por e-mail</Button>
+        </span>
+      </div>
+      <p class="form__privacy">Seus dados são usados apenas para responder a este contato.</p>
+    </form>
+
+    <div class="success" data-contact-success hidden>
+      <svg class="success__check" viewBox="0 0 96 96" width="96" height="96" aria-hidden="true">
+        <defs>
+          <linearGradient id="contact-check-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" style="stop-color: var(--c-cyan)"></stop>
+            <stop offset="0.5" style="stop-color: var(--c-blue)"></stop>
+            <stop offset="1" style="stop-color: var(--c-magenta)"></stop>
+          </linearGradient>
+        </defs>
+        <circle class="success__ring" cx="48" cy="48" r="44" pathLength="1"></circle>
+        <path class="success__tick" d="M30 49.5l12 12 24-26" pathLength="1"></path>
+      </svg>
+      <h2 class="success__title" tabindex="-1" data-success-title>Mensagem pronta!</h2>
+      <p class="success__text muted" data-success-text></p>
+      <p class="success__fallback">
+        Não abriu? <a href="#" data-success-link>Tente por aqui</a>.
+      </p>
+      <button type="button" class="success__reset" data-contact-reset>Enviar outra mensagem</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { initContactForm } from '@/scripts/contact-form';
+  initContactForm();
+</script>
+
+<style>
+  @property --panel-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  /* Glass panel; the neon highlight orbits the border only while hovered and never while
+     someone is typing (focus-within), so it can't compete with the form. */
+  .panel {
+    position: relative;
+    isolation: isolate;
+    border-radius: var(--r-xl);
+    padding: 1px;
+    background:
+      conic-gradient(
+        from var(--panel-angle),
+        transparent 0deg,
+        color-mix(in srgb, var(--c-cyan) 85%, transparent) 40deg,
+        transparent 110deg,
+        transparent 200deg,
+        color-mix(in srgb, var(--c-magenta) 85%, transparent) 250deg,
+        transparent 320deg
+      ),
+      var(--grad-border);
+    animation: panel-orbit 9s linear infinite paused;
+    min-width: 0;
+  }
+
+  @media (hover: hover) {
+    .panel:hover:not(:focus-within) {
+      animation-play-state: running;
+    }
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    inset: 12% 10%;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--grad-brand);
+    filter: blur(90px);
+    opacity: 0.16;
+    pointer-events: none;
+  }
+
+  @keyframes panel-orbit {
+    to {
+      --panel-angle: 360deg;
+    }
+  }
+
+  .panel__inner {
+    position: relative;
+    border-radius: calc(var(--r-xl) - 1px);
+    background: var(--bg-elev-solid);
+    padding: clamp(var(--sp-5), 4vw, var(--sp-7));
+  }
+
+  @supports (backdrop-filter: blur(1px)) {
+    .panel__inner {
+      background: color-mix(in srgb, var(--bg-elev-solid) 88%, transparent);
+      backdrop-filter: blur(24px) saturate(140%);
+    }
+  }
+
+  /* ---------- Form ---------- */
+  .form__head {
+    display: grid;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-5);
+  }
+
+  .form__title {
+    font-size: var(--fs-xl);
+  }
+
+  .form__hint {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .form__summary:empty {
+    display: none;
+  }
+
+  .form__summary {
+    margin-bottom: var(--sp-4);
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-sm);
+    border: 1px solid color-mix(in srgb, var(--c-pink) 45%, transparent);
+    background: color-mix(in srgb, var(--c-pink) 10%, transparent);
+    font-size: var(--fs-sm);
+  }
+
+  .form__grid {
+    display: grid;
+    gap: var(--sp-4);
+  }
+
+  @media (min-width: 640px) {
+    .form__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .field--full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* ---------- Floating-label field ---------- */
+  .field {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .field__control {
+    width: 100%;
+    min-height: 60px;
+    padding: 1.6rem var(--sp-4) 0.55rem;
+    border-radius: var(--r-md);
+    border: 1px solid var(--line-strong);
+    background: color-mix(in srgb, var(--c-night) 55%, transparent);
+    color: var(--text);
+    font-size: var(--fs-base);
+    line-height: 1.4;
+    appearance: none;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur) var(--ease-out),
+      background var(--dur) var(--ease-out);
+  }
+
+  .field__control--area {
+    resize: vertical;
+    min-height: 150px;
+    padding-top: 1.9rem;
+  }
+
+  .field__control:hover {
+    border-color: color-mix(in srgb, var(--c-cyan) 40%, var(--line-strong));
+  }
+
+  .field__control:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--c-ink) 70%, transparent);
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--c-cyan) 24%, transparent),
+      0 0 28px color-mix(in srgb, var(--c-cyan) 16%, transparent);
+  }
+
+  .field__label {
+    position: absolute;
+    top: 0;
+    left: var(--sp-4);
+    right: var(--sp-4);
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--text-muted);
+    font-size: var(--fs-base);
+    white-space: nowrap;
+    pointer-events: none;
+    transform-origin: left center;
+    transition:
+      transform var(--dur) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  .field__req {
+    color: var(--c-pink);
+  }
+
+  /* Float up when focused, filled, or a select (always has a value). */
+  .field__control:focus + .field__label,
+  .field__control:not(:placeholder-shown) + .field__label,
+  .field--select .field__label {
+    transform: translateY(-0.8rem) scale(0.78);
+    color: var(--accent);
+  }
+
+  .field__control:not(:focus):not(:placeholder-shown) + .field__label,
+  .field--select .field__control:not(:focus) + .field__label {
+    color: var(--text-muted);
+  }
+
+  .field--select .field__control {
+    padding-right: var(--sp-7);
+    cursor: pointer;
+    text-overflow: ellipsis;
+  }
+
+  .field--select option {
+    background: var(--bg-elev-solid);
+    color: var(--text);
+  }
+
+  .field__chevron {
+    position: absolute;
+    right: var(--sp-4);
+    top: 21px;
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  .field--select:focus-within .field__chevron {
+    color: var(--accent);
+    transform: rotate(180deg);
+  }
+
+  .field__help {
+    margin-top: var(--sp-1);
+    padding-left: var(--sp-4);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  .field__error {
+    padding-left: var(--sp-4);
+    font-size: var(--fs-sm);
+    color: var(--c-pink);
+  }
+
+  .field__error:empty {
+    display: none;
+  }
+
+  .field__error:not(:empty) {
+    margin-top: var(--sp-2);
+    animation: error-in var(--dur) var(--ease-out);
+  }
+
+  .field__control[aria-invalid='true'] {
+    border-color: var(--c-pink);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-pink) 18%, transparent);
+  }
+
+  .field__control[aria-invalid='true'] + .field__label {
+    color: var(--c-pink);
+  }
+
+  @keyframes error-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+
+  /* ---------- Actions ---------- */
+  .form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    margin-top: var(--sp-6);
+  }
+
+  .form__action {
+    display: contents;
+  }
+
+  .form__privacy {
+    margin-top: var(--sp-4);
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 639.98px) {
+    .form__actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .form__actions :global(a),
+    .form__actions :global(button) {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  /* ---------- Success state ---------- */
+  .panel[data-state='success'] .form {
+    display: none;
+  }
+
+  .success {
+    display: grid;
+    justify-items: center;
+    gap: var(--sp-4);
+    padding-block: var(--sp-7);
+    text-align: center;
+  }
+
+  .success[hidden] {
+    display: none;
+  }
+
+  .success__check {
+    width: 96px;
+    height: 96px;
+    filter: drop-shadow(0 0 18px color-mix(in srgb, var(--c-cyan) 45%, transparent));
+  }
+
+  .success__ring,
+  .success__tick {
+    fill: none;
+    stroke: url(#contact-check-grad);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  .success__ring {
+    stroke-width: 2;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    animation: draw 0.9s var(--ease-in-out) forwards;
+  }
+
+  .success__tick {
+    stroke-width: 4;
+    animation: draw 0.55s var(--ease-out) 0.7s forwards;
+  }
+
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  .success__title {
+    font-size: var(--fs-xl);
+    animation: rise var(--dur-slow) var(--ease-out) 0.35s both;
+  }
+
+  .success__title:focus {
+    outline: none;
+  }
+
+  .success__text {
+    max-width: 30rem;
+    animation: rise var(--dur-slow) var(--ease-out) 0.45s both;
+  }
+
+  .success__fallback {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    animation: rise var(--dur-slow) var(--ease-out) 0.55s both;
+  }
+
+  .success__fallback a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .success__reset {
+    margin-top: var(--sp-2);
+    padding: var(--sp-3) var(--sp-5);
+    border-radius: var(--r-pill);
+    border: 1px solid var(--line-strong);
+    font-size: var(--fs-sm);
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background var(--dur) var(--ease-out);
+    animation: rise var(--dur-slow) var(--ease-out) 0.65s both;
+  }
+
+  .success__reset:hover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--c-cyan) 10%, transparent);
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel {
+      animation: none;
+    }
+    .success__ring,
+    .success__tick {
+      stroke-dashoffset: 0;
+    }
+  }
+</style>

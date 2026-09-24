@@ -1,0 +1,44 @@
+---
+/**
+ * Service pictogram tile — one treatment everywhere a service is shown (home + /servicos/).
+ * Lights up (accent border, no halo) when its GlowCard is hovered/focused or its card is open.
+ */
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/data/site';
+
+interface Props {
+  name: IconName;
+  size?: number;
+  class?: string;
+}
+
+const { name, size = 26, class: className } = Astro.props;
+---
+
+<span class:list={['svc-icon', className]}>
+  <Icon name={name} size={size} />
+</span>
+
+<style>
+  .svc-icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 60px;
+    height: 60px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--line-strong);
+    background: var(--c-ink);
+    color: var(--c-cyan);
+    transition:
+      color var(--dur) var(--ease-out),
+      border-color var(--dur) var(--ease-out),
+      background-color var(--dur) var(--ease-out);
+  }
+
+  :global(:is(.glow-card:hover, .glow-card:focus-within, [data-open='true'])) .svc-icon {
+    border-color: var(--c-cyan);
+    background: color-mix(in srgb, var(--c-cyan) 10%, var(--c-ink));
+  }
+</style>

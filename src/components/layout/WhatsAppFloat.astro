@@ -1,1 +1,168 @@
-<!-- stub: layout/WhatsAppFloat -->
+---
+import { site, whatsappLink } from '@/data/site';
+import Icon from '@/components/ui/Icon.astro';
+---
+
+<a
+  class="wa"
+  href={whatsappLink()}
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label={`Conversar com a ${site.shortName} no WhatsApp (abre em nova aba)`}
+  data-wa-float
+>
+  <span class="wa-ring" aria-hidden="true"></span>
+  <span class="wa-btn" aria-hidden="true"><Icon name="whatsapp" size={26} /></span>
+  <span class="wa-tip" aria-hidden="true">
+    <span class="wa-tip-dot"></span>Fale com a gente
+  </span>
+</a>
+
+<style>
+  .wa {
+    position: fixed;
+    right: max(var(--sp-4), env(safe-area-inset-right));
+    bottom: max(var(--sp-4), env(safe-area-inset-bottom));
+    z-index: var(--z-float);
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    transition:
+      opacity var(--dur) var(--ease-out),
+      transform var(--dur) var(--ease-out),
+      visibility 0s linear 0s;
+  }
+
+  /* Hidden until 300px of scroll — only when JS can reveal it again. */
+  :global(html.js) .wa:not(.is-visible),
+  :global(html[data-menu='open']) .wa {
+    opacity: 0;
+    transform: translateY(16px) scale(0.85);
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity var(--dur) var(--ease-out),
+      transform var(--dur) var(--ease-out),
+      visibility 0s linear var(--dur);
+  }
+
+  .wa-btn {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    color: var(--c-white);
+    background: var(--grad-brand);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--c-white) 25%, transparent),
+      0 8px 24px color-mix(in srgb, var(--c-night) 60%, transparent);
+    transition:
+      transform var(--dur) var(--ease-out),
+      box-shadow var(--dur) var(--ease-out);
+  }
+
+  .wa:hover .wa-btn,
+  .wa:focus-visible .wa-btn {
+    transform: scale(1.06);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--c-white) 35%, transparent),
+      var(--glow-sm);
+  }
+
+  .wa:focus-visible {
+    outline-offset: 4px;
+    border-radius: 50%;
+  }
+
+  .wa-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid var(--c-cyan);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* A short "I'm here" ping on arrival, then quiet. */
+  .wa.is-visible .wa-ring {
+    animation: wa-ping 2.8s var(--ease-out) 0.4s 3;
+  }
+
+  @keyframes wa-ping {
+    0% {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(1.7);
+    }
+  }
+
+  .wa-tip {
+    position: absolute;
+    right: calc(100% + var(--sp-3));
+    top: 50%;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-4);
+    white-space: nowrap;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    background: var(--bg-elev-solid);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-pill);
+    opacity: 0;
+    transform: translate(8px, -50%);
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      transform var(--dur) var(--ease-out);
+    pointer-events: none;
+  }
+
+  .wa-tip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-cyan);
+  }
+
+  .wa:hover .wa-tip,
+  .wa:focus-visible .wa-tip {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+
+  @media (hover: none) {
+    .wa-tip {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  const btn = document.querySelector<HTMLElement>('[data-wa-float]');
+  if (btn) {
+    let ticking = false;
+    const update = () => {
+      btn.classList.toggle('is-visible', window.scrollY > 300);
+      ticking = false;
+    };
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(update);
+      },
+      { passive: true },
+    );
+    update();
+  }
+</script>

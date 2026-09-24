@@ -1,4 +1,18 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import Hero from '@/components/sections/home/Hero.astro';
+import MarqueeBand from '@/components/sections/home/MarqueeBand.astro';
+import About from '@/components/sections/home/About.astro';
+import Services from '@/components/sections/home/Services.astro';
+import ProcessTimeline from '@/components/sections/shared/ProcessTimeline.astro';
+import Purpose from '@/components/sections/home/Purpose.astro';
 ---
-<BaseLayout preloader><h1>stub</h1></BaseLayout>
+
+<BaseLayout preloader>
+  <Hero />
+  <MarqueeBand />
+  <About />
+  <Services />
+  <ProcessTimeline />
+  <Purpose />
+</BaseLayout>

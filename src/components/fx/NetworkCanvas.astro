@@ -1,0 +1,564 @@
+---
+// Living corporate network background: drifting nodes that link by proximity, data pulses
+// routed hop-by-hop along the links, hub nodes that flash when a packet arrives, soft pointer
+// attraction + depth parallax. One rAF per instance, spatial grid for O(n) linking, paused
+// off-screen / hidden tab, DPR ≤ 2, lighter on touch, a single static frame on reduced motion.
+// Place inside a `position: relative` parent; content above it should sit on --z-base.
+interface Props {
+  class?: string;
+  /** Node density multiplier (1 = default). */
+  density?: number;
+}
+
+const { class: className, density = 1 } = Astro.props;
+---
+
+<div class:list={['network', className]} aria-hidden="true">
+  <canvas class="network__canvas" data-network data-density={density}></canvas>
+</div>
+
+<script>
+  import { prefersReducedMotion, isTouch } from '@/scripts/motion';
+
+  type RGB = [number, number, number];
+
+  interface NetNode {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    z: number; // depth 0.35..1 → size, alpha, parallax
+    r: number;
+    hub: boolean;
+    flash: number;
+    px: number; // rendered position (after parallax + attraction)
+    py: number;
+  }
+
+  interface Pulse {
+    a: number;
+    b: number;
+    t: number;
+    speed: number; // px/s
+    hot: boolean; // magenta vs cyan
+    hops: number;
+  }
+
+  const FORWARD: ReadonlyArray<[number, number]> = [
+    [0, 0],
+    [1, 0],
+    [-1, 1],
+    [0, 1],
+    [1, 1],
+  ];
+  const EDGE_BUCKETS = 6;
+
+  const rand = (min: number, max: number) => min + Math.random() * (max - min);
+
+  function cssColor(el: Element, name: string, fallback: RGB): RGB {
+    const v = getComputedStyle(el).getPropertyValue(name).trim();
+    const m = v.match(/^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
+    return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : fallback;
+  }
+
+  function glowSprite([r, g, b]: RGB, size = 64) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const x = c.getContext('2d')!;
+    const h = size / 2;
+    const grd = x.createRadialGradient(h, h, 0, h, h, h);
+    grd.addColorStop(0, 'rgba(255,255,255,1)');
+    grd.addColorStop(0.1, `rgba(${r},${g},${b},0.95)`);
+    grd.addColorStop(0.35, `rgba(${r},${g},${b},0.28)`);
+    grd.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    x.fillStyle = grd;
+    x.fillRect(0, 0, size, size);
+    return c;
+  }
+
+  function createNetwork(canvas: HTMLCanvasElement) {
+    const ctx = canvas.getContext('2d', { alpha: true });
+    const host = canvas.parentElement;
+    if (!ctx || !host) return;
+
+    const reduced = prefersReducedMotion();
+    const touch = isTouch();
+    const density = Number(canvas.dataset.density) || 1;
+
+    const cCyan = cssColor(canvas, '--c-cyan', [59, 202, 230]);
+    const cBlue = cssColor(canvas, '--c-blue', [70, 94, 186]);
+    const cMagenta = cssColor(canvas, '--c-magenta', [192, 79, 214]);
+    const cPink = cssColor(canvas, '--c-pink', [240, 122, 216]);
+    const spriteCyan = glowSprite(cCyan);
+    const spriteMagenta = glowSprite(cMagenta);
+    const rgb = (c: RGB) => `rgb(${c[0]},${c[1]},${c[2]})`;
+
+    let w = 0;
+    let h = 0;
+    let link = 140;
+    let brand: CanvasGradient | null = null;
+    const nodes: NetNode[] = [];
+    const pulses: Pulse[] = [];
+
+    // Spatial grid (linked lists in typed arrays, rebuilt each frame).
+    let cols = 1;
+    let rows = 1;
+    let head = new Int32Array(1);
+    let next = new Int32Array(1);
+
+    // Edges of the current frame.
+    let edgeCount = 0;
+    let edges = new Float32Array(0); // x1,y1,x2,y2 per edge
+    let edgeBucket = new Uint8Array(0);
+
+    // Pointer (client coords) + smoothed canvas coords.
+    const ptr = { cx: -1e4, cy: -1e4, x: 0, y: 0, nx: 0, ny: 0, s: 0, inside: false };
+
+    const makeNode = (x = rand(0, w), y = rand(0, h)): NetNode => {
+      const z = rand(0.35, 1);
+      const angle = rand(0, Math.PI * 2);
+      const speed = rand(5, 16) * (0.5 + z * 0.5);
+      const hub = Math.random() < 0.1;
+      return {
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        z,
+        r: hub ? rand(2, 2.6) : rand(0.8, 1.6),
+        hub,
+        flash: 0,
+        px: x,
+        py: y,
+      };
+    };
+
+    function targetCount() {
+      const base = ((w * h) / 12000) * density * (touch ? 0.55 : 1);
+      const cap = touch || w < 640 ? 60 : 150;
+      return Math.round(Math.min(cap, Math.max(22, base)));
+    }
+
+    function resize() {
+      const rect = host!.getBoundingClientRect();
+      const nw = Math.max(1, Math.round(rect.width));
+      const nh = Math.max(1, Math.round(rect.height));
+      if (nw === w && nh === h) return;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, touch ? 1.5 : 2);
+      canvas.width = Math.round(nw * dpr);
+      canvas.height = Math.round(nh * dpr);
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // Keep the existing layout when resizing: scale positions, then add/remove nodes.
+      if (w && h) {
+        const sx = nw / w;
+        const sy = nh / h;
+        nodes.forEach((n) => {
+          n.x *= sx;
+          n.y *= sy;
+        });
+      }
+      w = nw;
+      h = nh;
+      link = Math.min(170, Math.max(105, w * 0.1));
+
+      const want = targetCount();
+      while (nodes.length < want) nodes.push(makeNode());
+      if (nodes.length > want) {
+        nodes.length = want;
+        pulses.length = 0;
+      }
+
+      cols = Math.ceil(w / link) + 2;
+      rows = Math.ceil(h / link) + 2;
+      head = new Int32Array(cols * rows);
+      next = new Int32Array(nodes.length);
+      edges = new Float32Array(nodes.length * 12 * 4);
+      edgeBucket = new Uint8Array(nodes.length * 12);
+
+      brand = ctx!.createLinearGradient(0, 0, w, h);
+      brand.addColorStop(0, rgb(cCyan));
+      brand.addColorStop(0.45, rgb(cBlue));
+      brand.addColorStop(0.8, rgb(cMagenta));
+      brand.addColorStop(1, rgb(cPink));
+      buildGrid();
+    }
+
+    const cellOf = (x: number, y: number) => {
+      const cx = Math.min(cols - 1, Math.max(0, Math.floor(x / link) + 1));
+      const cy = Math.min(rows - 1, Math.max(0, Math.floor(y / link) + 1));
+      return [cx, cy] as const;
+    };
+
+    function buildGrid() {
+      head.fill(-1);
+      for (let i = 0; i < nodes.length; i++) {
+        const [cx, cy] = cellOf(nodes[i].px, nodes[i].py);
+        const k = cy * cols + cx;
+        next[i] = head[k];
+        head[k] = i;
+      }
+    }
+
+    function neighbors(i: number, out: number[]) {
+      out.length = 0;
+      const n = nodes[i];
+      const [cx, cy] = cellOf(n.px, n.py);
+      const l2 = link * link;
+      for (let oy = -1; oy <= 1; oy++) {
+        for (let ox = -1; ox <= 1; ox++) {
+          const gx = cx + ox;
+          const gy = cy + oy;
+          if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) continue;
+          for (let j = head[gy * cols + gx]; j !== -1; j = next[j]) {
+            if (j === i) continue;
+            const dx = nodes[j].px - n.px;
+            const dy = nodes[j].py - n.py;
+            if (dx * dx + dy * dy < l2) out.push(j);
+          }
+        }
+      }
+      return out;
+    }
+
+    function collectEdges() {
+      edgeCount = 0;
+      const max = edgeBucket.length;
+      const l2 = link * link;
+      for (let i = 0; i < nodes.length && edgeCount < max; i++) {
+        const a = nodes[i];
+        const [cx, cy] = cellOf(a.px, a.py);
+        for (const [ox, oy] of FORWARD) {
+          const gx = cx + ox;
+          const gy = cy + oy;
+          if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) continue;
+          for (let j = head[gy * cols + gx]; j !== -1; j = next[j]) {
+            if (ox === 0 && oy === 0 && j <= i) continue;
+            const b = nodes[j];
+            const dx = b.px - a.px;
+            const dy = b.py - a.py;
+            const d2 = dx * dx + dy * dy;
+            if (d2 >= l2) continue;
+            const k = 1 - Math.sqrt(d2) / link;
+            const alpha = k * k * (0.35 + Math.min(a.z, b.z) * 0.65);
+            const o = edgeCount * 4;
+            edges[o] = a.px;
+            edges[o + 1] = a.py;
+            edges[o + 2] = b.px;
+            edges[o + 3] = b.py;
+            edgeBucket[edgeCount] = Math.min(EDGE_BUCKETS - 1, Math.floor(alpha * EDGE_BUCKETS));
+            if (++edgeCount >= max) break;
+          }
+        }
+      }
+    }
+
+    const scratch: number[] = [];
+
+    function spawnPulse() {
+      for (let tries = 0; tries < 6; tries++) {
+        const a = (Math.random() * nodes.length) | 0;
+        const ns = neighbors(a, scratch);
+        if (!ns.length) continue;
+        pulses.push({
+          a,
+          b: ns[(Math.random() * ns.length) | 0],
+          t: 0,
+          speed: rand(90, 190),
+          hot: Math.random() < 0.4,
+          hops: 0,
+        });
+        return;
+      }
+    }
+
+    function update(dt: number) {
+      // Pointer smoothing + fade in/out of its influence.
+      const rect = canvas.getBoundingClientRect();
+      const lx = ptr.cx - rect.left;
+      const ly = ptr.cy - rect.top;
+      ptr.inside = lx > -80 && ly > -80 && lx < w + 80 && ly < h + 80;
+      const ease = 1 - Math.pow(0.001, dt); // frame-rate independent lerp
+      if (ptr.inside) {
+        ptr.x += (lx - ptr.x) * ease;
+        ptr.y += (ly - ptr.y) * ease;
+      }
+      ptr.s += ((ptr.inside ? 1 : 0) - ptr.s) * ease * 0.5;
+      const tnx = ptr.inside ? (lx / w) * 2 - 1 : 0;
+      const tny = ptr.inside ? (ly / h) * 2 - 1 : 0;
+      ptr.nx += (tnx - ptr.nx) * ease * 0.4;
+      ptr.ny += (tny - ptr.ny) * ease * 0.4;
+
+      const R = Math.min(220, w * 0.22);
+      const m = 40;
+      for (const n of nodes) {
+        n.x += n.vx * dt;
+        n.y += n.vy * dt;
+        if (n.x < -m) n.x = w + m;
+        else if (n.x > w + m) n.x = -m;
+        if (n.y < -m) n.y = h + m;
+        else if (n.y > h + m) n.y = -m;
+
+        // Depth parallax: near nodes (z→1) travel further against the pointer.
+        let px = n.x - ptr.nx * 22 * n.z;
+        let py = n.y - ptr.ny * 16 * n.z;
+        if (ptr.s > 0.01) {
+          const dx = ptr.x - px;
+          const dy = ptr.y - py;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < R) {
+            const f = (1 - d / R) ** 2 * 0.28 * ptr.s;
+            px += dx * f;
+            py += dy * f;
+          }
+        }
+        n.px = px;
+        n.py = py;
+        if (n.flash > 0) n.flash = Math.max(0, n.flash - dt * 1.6);
+      }
+
+      buildGrid();
+
+      // Route pulses: on arrival, flash the node and hop to a new neighbour.
+      const maxLen2 = (link * 1.15) ** 2;
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        const p = pulses[i];
+        const a = nodes[p.a];
+        const b = nodes[p.b];
+        if (!a || !b) {
+          pulses.splice(i, 1);
+          continue;
+        }
+        const dx = b.px - a.px;
+        const dy = b.py - a.py;
+        const len2 = dx * dx + dy * dy;
+        if (len2 > maxLen2) {
+          pulses.splice(i, 1);
+          continue;
+        }
+        p.t += (p.speed * dt) / Math.max(20, Math.sqrt(len2));
+        if (p.t < 1) continue;
+        b.flash = b.hub ? 1 : 0.6;
+        const ns = neighbors(p.b, scratch).filter((j) => j !== p.a);
+        if (ns.length && p.hops < 7 && Math.random() < 0.82) {
+          p.a = p.b;
+          p.b = ns[(Math.random() * ns.length) | 0];
+          p.t = 0;
+          p.hops++;
+        } else {
+          pulses.splice(i, 1);
+        }
+      }
+      const wanted = Math.max(4, Math.round(nodes.length * 0.12));
+      if (pulses.length < wanted && Math.random() < 0.25) spawnPulse();
+    }
+
+    function draw() {
+      ctx!.clearRect(0, 0, w, h);
+      if (!brand) return;
+      collectEdges();
+
+      // Links, batched by alpha bucket (6 strokes instead of hundreds).
+      ctx!.strokeStyle = brand;
+      ctx!.lineWidth = 1;
+      for (let bkt = 0; bkt < EDGE_BUCKETS; bkt++) {
+        ctx!.globalAlpha = ((bkt + 0.5) / EDGE_BUCKETS) * 0.5;
+        ctx!.beginPath();
+        for (let e = 0; e < edgeCount; e++) {
+          if (edgeBucket[e] !== bkt) continue;
+          const o = e * 4;
+          ctx!.moveTo(edges[o], edges[o + 1]);
+          ctx!.lineTo(edges[o + 2], edges[o + 3]);
+        }
+        ctx!.stroke();
+      }
+
+      // Pointer acts as a temporary node linking to what's around it.
+      if (ptr.s > 0.02) {
+        const R = link * 1.2;
+        ctx!.beginPath();
+        for (const n of nodes) {
+          const dx = n.px - ptr.x;
+          const dy = n.py - ptr.y;
+          if (dx * dx + dy * dy < R * R) {
+            ctx!.moveTo(ptr.x, ptr.y);
+            ctx!.lineTo(n.px, n.py);
+          }
+        }
+        ctx!.globalAlpha = 0.18 * ptr.s;
+        ctx!.stroke();
+      }
+
+      // Nodes in 3 depth layers.
+      ctx!.fillStyle = brand;
+      for (let layer = 0; layer < 3; layer++) {
+        const lo = 0.35 + layer * 0.2167;
+        const hi = lo + 0.2167;
+        ctx!.globalAlpha = 0.45 + layer * 0.25;
+        ctx!.beginPath();
+        for (const n of nodes) {
+          if (n.z < lo || n.z >= hi + (layer === 2 ? 0.01 : 0)) continue;
+          const r = n.r * (0.6 + n.z * 0.6);
+          ctx!.moveTo(n.px + r, n.py);
+          ctx!.arc(n.px, n.py, r, 0, Math.PI * 2);
+        }
+        ctx!.fill();
+      }
+
+      // Hub rings.
+      ctx!.globalAlpha = 0.35;
+      ctx!.beginPath();
+      for (const n of nodes) {
+        if (!n.hub) continue;
+        const r = n.r * 3.2;
+        ctx!.moveTo(n.px + r, n.py);
+        ctx!.arc(n.px, n.py, r, 0, Math.PI * 2);
+      }
+      ctx!.stroke();
+
+      // Glows (additive): hubs idle glow, arrival flashes, travelling pulses with a short trail.
+      ctx!.globalCompositeOperation = 'lighter';
+      for (const n of nodes) {
+        const g = (n.hub ? 0.22 : 0) + n.flash * 0.75;
+        if (g < 0.02) continue;
+        const s = (n.hub ? 26 : 16) + n.flash * 22;
+        ctx!.globalAlpha = Math.min(1, g);
+        ctx!.drawImage(n.hub ? spriteMagenta : spriteCyan, n.px - s / 2, n.py - s / 2, s, s);
+      }
+      for (const p of pulses) {
+        const a = nodes[p.a];
+        const b = nodes[p.b];
+        const sprite = p.hot ? spriteMagenta : spriteCyan;
+        for (let k = 0; k < 4; k++) {
+          const t = p.t - k * 0.045;
+          if (t < 0) break;
+          const x = a.px + (b.px - a.px) * t;
+          const y = a.py + (b.py - a.py) * t;
+          const s = 18 - k * 3.5;
+          ctx!.globalAlpha = 0.95 - k * 0.24;
+          ctx!.drawImage(sprite, x - s / 2, y - s / 2, s, s);
+        }
+      }
+      ctx!.globalCompositeOperation = 'source-over';
+      ctx!.globalAlpha = 1;
+    }
+
+    function renderStatic() {
+      update(0);
+      // A few frozen packets so the still frame still reads as "data flowing".
+      pulses.length = 0;
+      for (let i = 0; i < Math.max(4, nodes.length * 0.08); i++) spawnPulse();
+      pulses.forEach((p) => (p.t = rand(0.2, 0.8)));
+      draw();
+      canvas.classList.add('is-ready');
+    }
+
+    // --- lifecycle --------------------------------------------------------------------
+    let raf = 0;
+    let last = 0;
+    let inView = false;
+
+    const frame = (now: number) => {
+      const dt = Math.min(0.05, last ? (now - last) / 1000 : 0.016);
+      last = now;
+      update(dt);
+      draw();
+      raf = requestAnimationFrame(frame);
+    };
+
+    const sync = () => {
+      const run = inView && !document.hidden;
+      if (run && !raf) {
+        last = 0;
+        raf = requestAnimationFrame(frame);
+        canvas.classList.add('is-ready');
+      } else if (!run && raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+
+    resize();
+
+    if (reduced) {
+      renderStatic();
+      new ResizeObserver(() => {
+        const pw = w;
+        const ph = h;
+        resize();
+        if (pw !== w || ph !== h) renderStatic();
+      }).observe(host);
+      return;
+    }
+
+    // Warm up so the first visible frame already has packets in flight.
+    update(0);
+    for (let i = 0; i < 12; i++) spawnPulse();
+
+    new ResizeObserver(() => resize()).observe(host);
+    new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      sync();
+    }).observe(canvas);
+    document.addEventListener('visibilitychange', sync);
+
+    if (!touch) {
+      window.addEventListener(
+        'pointermove',
+        (e) => {
+          if (e.pointerType !== 'mouse') return;
+          if (ptr.cx < -9e3) {
+            const r = canvas.getBoundingClientRect();
+            ptr.x = e.clientX - r.left;
+            ptr.y = e.clientY - r.top;
+          }
+          ptr.cx = e.clientX;
+          ptr.cy = e.clientY;
+        },
+        { passive: true },
+      );
+      document.documentElement.addEventListener('pointerleave', () => {
+        ptr.cx = ptr.cy = -1e4;
+      });
+    }
+  }
+
+  document.querySelectorAll<HTMLCanvasElement>('canvas[data-network]').forEach(createNetwork);
+</script>
+
+<style>
+  .network {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    /* Fade to the page on every edge. */
+    -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 45%, #000 35%, transparent 100%);
+    mask-image: radial-gradient(ellipse 75% 70% at 50% 45%, #000 35%, transparent 100%);
+  }
+
+  /* No-JS / pre-paint fallback: a faint technical dot grid. */
+  .network::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, var(--line-strong) 1px, transparent 1.5px);
+    background-size: 32px 32px;
+    opacity: 0.5;
+  }
+
+  .network__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 1.2s var(--ease-out);
+  }
+
+  .network__canvas:global(.is-ready) {
+    opacity: 1;
+  }
+</style>

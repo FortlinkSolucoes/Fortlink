@@ -1,0 +1,106 @@
+---
+import { about } from '@/data/site';
+
+const [lead, ...rest] = about.paragraphs;
+const words = lead.split(/\s+/);
+---
+
+<section class="about section" id="quem-somos" aria-labelledby="about-title" data-about>
+  <div class="container about__grid">
+    <div class="about__side">
+      <p class="eyebrow" data-reveal>Quem somos</p>
+      <h2 id="about-title" class="about__title" data-split>{about.title}</h2>
+    </div>
+
+    <div class="about__body">
+      <p class="about__lit" data-about-lit>
+        {words.map((w) => <span class="about__word">{`${w} `}</span>)}
+      </p>
+
+      <div class="about__more">
+        {rest.map((p) => <p class="muted" data-reveal>{p}</p>)}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .about__grid {
+    display: grid;
+    gap: var(--sp-7);
+  }
+
+  .about__side {
+    display: grid;
+    gap: var(--sp-5);
+    align-content: start;
+  }
+
+  /* Column label: the lit paragraph is the headline act here. */
+  .about__title {
+    font-size: var(--fs-lg);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--text-muted);
+    max-width: 18ch;
+  }
+
+  .about__lit {
+    font-family: var(--font-heading);
+    font-size: var(--fs-xl);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .about__more {
+    display: grid;
+    gap: var(--sp-5);
+    margin-top: var(--sp-7);
+    font-size: var(--fs-md);
+  }
+
+  @media (min-width: 640px) {
+    .about__more {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--sp-6);
+    }
+  }
+
+  @media (min-width: 960px) {
+    .about__grid {
+      grid-template-columns: 4fr 8fr;
+      gap: var(--sp-8);
+    }
+
+    .about__side {
+      position: sticky;
+      top: calc(var(--header-h) + var(--sp-6));
+      align-self: start;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, onMotionReady, prefersReducedMotion } from '@/scripts/motion';
+
+  onMotionReady(() => {
+    if (prefersReducedMotion()) return;
+    const lit = document.querySelector<HTMLElement>('[data-about-lit]');
+    if (!lit) return;
+
+    // Words "switch on" one by one as the paragraph crosses the viewport.
+    gsap.fromTo(
+      lit.querySelectorAll('.about__word'),
+      { opacity: 0.15 },
+      {
+        opacity: 1,
+        ease: 'none',
+        stagger: 0.1,
+        scrollTrigger: { trigger: lit, start: 'top 80%', end: 'bottom 50%', scrub: 0.6 },
+      },
+    );
+  });
+</script>

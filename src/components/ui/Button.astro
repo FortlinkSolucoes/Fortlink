@@ -1,0 +1,332 @@
+---
+/**
+ * Button / link-button.
+ * - primary: pill with sliding gradient, neon glow and a looping arrow on hover.
+ * - ghost:   glass pill with a 1px gradient border.
+ * - link:    inline text link with an animated underline.
+ * Renders <a> when `href` is set, otherwise <button>. Slot = label.
+ */
+import Icon, { type UiIconName } from './Icon.astro';
+
+interface Props {
+  href?: string;
+  variant?: 'primary' | 'ghost' | 'link';
+  icon?: UiIconName;
+  external?: boolean;
+  magnetic?: boolean;
+  class?: string;
+  type?: 'button' | 'submit';
+  size?: 'md' | 'lg';
+  [attr: string]: unknown;
+}
+
+const {
+  href,
+  variant = 'primary',
+  icon,
+  external = false,
+  magnetic = false,
+  class: className,
+  type = 'button',
+  size = 'md',
+  ...rest
+} = Astro.props;
+
+const classes = ['btn', `btn--${variant}`, `btn--${size}`, className];
+const magneticAttr = magnetic ? { 'data-magnetic': '' } : {};
+const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+---
+
+{
+  href ? (
+    <a href={href} class:list={classes} {...externalAttrs} {...magneticAttr} {...rest}>
+      <span class="btn__label">
+        <slot />
+      </span>
+      {icon && (
+        <span class="btn__icon" aria-hidden="true">
+          <Icon name={icon} size={18} class="btn__icon-a" />
+          <Icon name={icon} size={18} class="btn__icon-b" />
+        </span>
+      )}
+      {external && <span class="sr-only"> (abre em nova aba)</span>}
+    </a>
+  ) : (
+    <button type={type} class:list={classes} {...magneticAttr} {...rest}>
+      <span class="btn__label">
+        <slot />
+      </span>
+      {icon && (
+        <span class="btn__icon" aria-hidden="true">
+          <Icon name={icon} size={18} class="btn__icon-a" />
+          <Icon name={icon} size={18} class="btn__icon-b" />
+        </span>
+      )}
+    </button>
+  )
+}
+
+<style>
+  .btn {
+    --btn-h: 3.25rem;
+    --btn-px: var(--sp-6);
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+    min-height: var(--btn-h);
+    padding-inline: var(--btn-px);
+    border-radius: var(--r-pill);
+    font-family: var(--font-heading);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform var(--dur) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  .btn--lg {
+    --btn-h: 3.75rem;
+    --btn-px: var(--sp-7);
+    font-size: var(--fs-base);
+  }
+
+  .btn:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 4px;
+    border-radius: var(--r-pill);
+  }
+
+  .btn:disabled,
+  .btn[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .btn__label {
+    position: relative;
+  }
+
+  /* Icon slot: two copies, the first slides out while the second slides in. */
+  .btn__icon {
+    position: relative;
+    display: inline-grid;
+    width: 18px;
+    height: 18px;
+    overflow: hidden;
+    flex: none;
+  }
+
+  .btn__icon :global(svg) {
+    grid-area: 1 / 1;
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  .btn__icon :global(.btn__icon-b) {
+    transform: translateX(-140%);
+  }
+
+  .btn:is(:hover, :focus-visible) .btn__icon :global(.btn__icon-a) {
+    transform: translateX(140%);
+  }
+
+  .btn:is(:hover, :focus-visible) .btn__icon :global(.btn__icon-b) {
+    transform: translateX(0);
+  }
+
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+  /* ---------- Primary ---------- */
+  .btn--primary {
+    color: var(--c-night);
+    background-image: var(--grad-text);
+    background-size: 220% 100%;
+    background-position: 0% 50%;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--c-white) 45%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--c-white) 12%, transparent);
+    transition:
+      transform var(--dur) var(--ease-out),
+      background-position var(--dur-slow) var(--ease-out),
+      box-shadow var(--dur) var(--ease-out);
+  }
+
+  /* Neon halo: a blurred copy of the brand gradient behind the pill. */
+  .btn--primary::before {
+    content: '';
+    position: absolute;
+    inset: 12% 8% -8%;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--grad-brand);
+    filter: blur(18px);
+    opacity: 0.35;
+    transform: scale(0.9);
+    transition:
+      opacity var(--dur) var(--ease-out),
+      transform var(--dur) var(--ease-out);
+  }
+
+  /* Specular sheen sweeping across on hover. */
+  .btn--primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      105deg,
+      transparent 35%,
+      color-mix(in srgb, var(--c-white) 55%, transparent) 50%,
+      transparent 65%
+    );
+    background-size: 250% 100%;
+    background-position: 130% 0;
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+    transition: background-position var(--dur-slow) var(--ease-out);
+  }
+
+  .btn--primary:is(:hover, :focus-visible) {
+    background-position: 100% 50%;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--c-white) 55%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--c-white) 20%, transparent),
+      var(--glow-cyan);
+  }
+
+  .btn--primary:is(:hover, :focus-visible)::before {
+    opacity: 0.5;
+    transform: scale(1.04);
+  }
+
+  .btn--primary:is(:hover, :focus-visible)::after {
+    background-position: -30% 0;
+  }
+
+  /* ---------- Ghost ---------- */
+  .btn--ghost {
+    color: var(--text);
+    background: var(--bg-elev);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+    transition:
+      transform var(--dur) var(--ease-out),
+      background-color var(--dur) var(--ease-out),
+      box-shadow var(--dur) var(--ease-out);
+  }
+
+  /* 1px gradient border via mask (keeps the glass fill transparent). */
+  .btn--ghost::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    padding: 1px;
+    border-radius: inherit;
+    background: var(--grad-border);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+
+  .btn--ghost::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(
+      120% 160% at 50% 120%,
+      color-mix(in srgb, var(--c-cyan) 22%, transparent),
+      transparent 60%
+    );
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease-out);
+  }
+
+  .btn--ghost:is(:hover, :focus-visible) {
+    background-color: color-mix(in srgb, var(--c-ink) 80%, transparent);
+    box-shadow: 0 0 32px color-mix(in srgb, var(--c-cyan) 14%, transparent);
+  }
+
+  .btn--ghost:is(:hover, :focus-visible)::after {
+    opacity: 1;
+  }
+
+  /* ---------- Link ---------- */
+  .btn--link {
+    --btn-h: 2.75rem;
+    --btn-px: 0;
+    gap: var(--sp-2);
+    border-radius: var(--r-sm);
+    color: var(--text);
+    font-size: var(--fs-base);
+  }
+
+  .btn--link .btn__label {
+    padding-block: 2px;
+  }
+
+  .btn--link .btn__label::before,
+  .btn--link .btn__label::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1px;
+  }
+
+  .btn--link .btn__label::before {
+    background: var(--line-strong);
+  }
+
+  .btn--link .btn__label::after {
+    background: var(--grad-brand);
+    transform: scaleX(0);
+    transform-origin: right center;
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  .btn--link:is(:hover, :focus-visible) .btn__label::after {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+
+  .btn--link:is(:hover, :focus-visible) {
+    color: var(--c-white);
+  }
+
+  .btn--link:focus-visible {
+    border-radius: var(--r-sm);
+  }
+
+  .btn--link:active {
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn__icon :global(.btn__icon-b) {
+      display: none;
+    }
+    .btn:is(:hover, :focus-visible) .btn__icon :global(.btn__icon-a) {
+      transform: none;
+    }
+  }
+</style>

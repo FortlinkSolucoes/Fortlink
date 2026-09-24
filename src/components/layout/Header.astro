@@ -1,1 +1,760 @@
-<!-- stub: layout/Header -->
+---
+import { nav, site, whatsappLink } from '@/data/site';
+import Logo from '@/components/ui/Logo.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+
+const path = Astro.url.pathname.replace(/\/?$/, '/');
+const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+const isHome = path === '/';
+const addressLine = `${site.address.street} — ${site.address.city}/${site.address.state}`;
+---
+
+<header class:list={['hdr', { 'hdr--home': isHome }]} data-header>
+  <span class="hdr-glass" aria-hidden="true"></span>
+  <div class="container hdr-inner">
+    <a class="hdr-brand" href="/" aria-label={`${site.name} — página inicial`}>
+      <Logo variant="mark" animated class="hdr-mark" />
+      <span class="hdr-word" aria-hidden="true">{site.shortName.toUpperCase()}</span>
+    </a>
+
+    <nav class="hdr-nav" aria-label="Principal">
+      <ul class="hdr-list" data-hdr-list>
+        {
+          nav.map((item) => (
+            <li>
+              <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined} data-hdr-link>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <span class="hdr-ind" aria-hidden="true" data-hdr-ind></span>
+    </nav>
+
+    <div class="hdr-cta">
+      <Button href="/contato/" variant="primary" icon="arrow-up-right" magnetic>Solicitar orçamento</Button>
+    </div>
+
+    <button class="hdr-toggle" type="button" aria-expanded="false" aria-controls="menu-mobile" data-menu-toggle>
+      <span class="sr-only" data-menu-label>Abrir menu</span>
+      <span class="hdr-bars" aria-hidden="true"><span></span><span></span></span>
+    </button>
+  </div>
+  <span class="hdr-progress" aria-hidden="true" data-hdr-progress></span>
+</header>
+
+<!-- Sibling of <header>: a fixed child inside a backdrop-filtered ancestor would be clipped to it. -->
+<div class="menu" id="menu-mobile" data-open="false" data-menu data-lenis-prevent>
+  <div class="menu-grid" aria-hidden="true">
+    <span class="menu-scan"></span>
+    <span class="menu-node menu-node--a"></span>
+    <span class="menu-node menu-node--b"></span>
+    <span class="menu-node menu-node--c"></span>
+  </div>
+
+  <div class="container menu-inner">
+    <p class="eyebrow menu-eyebrow">Navegação</p>
+    <nav aria-label="Menu móvel">
+      <ol class="menu-list">
+        {
+          nav.map((item, i) => (
+            <li style={`--i:${i}`}>
+              <a class="menu-link" href={item.href} aria-current={isActive(item.href) ? 'page' : undefined} data-menu-link>
+                <span class="menu-num" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span class="menu-text">{item.label}</span>
+                <Icon name="arrow-up-right" size={28} class="menu-arrow" />
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    <div class="menu-cta" style={`--i:${nav.length}`}>
+      <Button href="/contato/" variant="primary" icon="arrow-right">Solicitar orçamento</Button>
+    </div>
+
+    <ul class="menu-info" style={`--i:${nav.length + 1}`}>
+      <li>
+        <span class="menu-info-label">E-mail</span>
+        <a href={`mailto:${site.email}`}>
+          <Icon name="mail" size={18} />{site.email}
+        </a>
+      </li>
+      <li>
+        <span class="menu-info-label">WhatsApp</span>
+        <a href={whatsappLink()} target="_blank" rel="noopener noreferrer">
+          <Icon name="whatsapp" size={18} />{site.whatsappDisplay}
+          <span class="sr-only">(abre em nova aba)</span>
+        </a>
+      </li>
+      <li>
+        <span class="menu-info-label">Endereço</span>
+        <span class="menu-info-text"><Icon name="pin" size={18} />{addressLine}</span>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<style>
+  .hdr {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: var(--z-header);
+    height: var(--header-h);
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  .hdr.is-hidden {
+    transform: translateY(-100%);
+  }
+
+  /* Glass lives on its own layer so it fades in (opacity only) after the first scroll. */
+  .hdr-glass {
+    position: absolute;
+    inset: 0;
+    background: var(--bg-elev);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border-bottom: 1px solid var(--line);
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease-out);
+    pointer-events: none;
+  }
+
+  .hdr.is-scrolled .hdr-glass {
+    opacity: 1;
+  }
+
+  :global(html[data-menu='open']) .hdr-glass,
+  :global(html[data-menu='open']) .hdr-progress {
+    opacity: 0;
+  }
+
+  .hdr-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background: var(--grad-brand);
+    transform: scaleX(0);
+    transform-origin: left;
+    opacity: 0.8;
+    pointer-events: none;
+  }
+
+  .hdr-inner {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-6);
+  }
+
+  .hdr-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-right: auto;
+    border-radius: var(--r-sm);
+  }
+
+  .hdr-brand :global(svg) {
+    width: auto;
+    height: 34px;
+  }
+
+  /* The mark never deforms: hover sends a data pulse along its traces instead. */
+  .hdr-brand :global(.logo-pulse path),
+  .hdr-brand :global(.logo-node--end) {
+    animation-name: none;
+  }
+
+  .hdr-brand:hover :global(.logo-pulse path),
+  .hdr-brand:focus-visible :global(.logo-pulse path) {
+    animation-name: logo-pulse;
+    animation-duration: 1.6s;
+  }
+
+  .hdr-word {
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.32em;
+    color: var(--text);
+  }
+
+  /* ---------- Desktop nav ---------- */
+  .hdr-nav,
+  .hdr-cta {
+    display: none;
+  }
+
+  .hdr-nav {
+    position: relative;
+  }
+
+  .hdr-list {
+    display: flex;
+    gap: var(--sp-6);
+    list-style: none;
+    padding: 0;
+  }
+
+  .hdr-list a {
+    position: relative;
+    display: inline-block;
+    padding-block: var(--sp-2);
+    font-size: var(--fs-sm);
+    letter-spacing: 0.01em;
+    color: var(--text-muted);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .hdr-list a:hover,
+  .hdr-list a:focus-visible,
+  .hdr-list a[aria-current='page'] {
+    color: var(--text);
+  }
+
+  /* No-JS fallback for the active marker; JS swaps it for the sliding indicator. */
+  .hdr-list a[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--grad-brand);
+  }
+
+  .hdr-list.has-ind a::after {
+    display: none;
+  }
+
+  .hdr-ind {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100px;
+    height: 1px;
+    background: var(--grad-brand);
+    box-shadow: var(--glow-sm);
+    transform-origin: left;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform var(--dur) var(--ease-out),
+      opacity var(--dur-fast) var(--ease-out);
+  }
+
+  /* ---------- Toggle ---------- */
+  .hdr-toggle {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin-right: calc(var(--sp-2) * -1);
+    border-radius: var(--r-pill);
+    border: 1px solid var(--line);
+    background: var(--bg-elev);
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .hdr-toggle:hover {
+    border-color: var(--line-strong);
+  }
+
+  .hdr-bars {
+    position: relative;
+    width: 18px;
+    height: 8px;
+  }
+
+  .hdr-bars span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1.5px;
+    border-radius: var(--r-pill);
+    background: var(--text);
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  .hdr-bars span:first-child {
+    top: 0;
+  }
+
+  .hdr-bars span:last-child {
+    bottom: 0;
+    transform-origin: right;
+    transform: scaleX(0.6);
+  }
+
+  .hdr-toggle[aria-expanded='true'] .hdr-bars span:first-child {
+    transform: translateY(3.25px) rotate(45deg);
+  }
+
+  .hdr-toggle[aria-expanded='true'] .hdr-bars span:last-child {
+    transform-origin: center;
+    transform: translateY(-3.25px) rotate(-45deg);
+  }
+
+  @media (min-width: 960px) {
+    .hdr-nav,
+    .hdr-cta {
+      display: block;
+    }
+
+    /* Home: the hero owns the primary CTA; the header one appears once the hero scrolls away. */
+    .hdr-cta {
+      transition:
+        opacity var(--dur) var(--ease-out),
+        visibility 0s linear 0s;
+    }
+
+    .hdr--home:not(.is-past-hero) .hdr-cta {
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity var(--dur) var(--ease-out),
+        visibility 0s linear var(--dur);
+    }
+
+    .hdr-toggle,
+    .menu {
+      display: none;
+    }
+  }
+
+  /* ---------- Mobile fullscreen menu ---------- */
+  .menu {
+    --ox: calc(100% - 44px);
+    --oy: 38px;
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-header) - 1);
+    display: flex;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--c-night-2);
+    visibility: hidden;
+    clip-path: circle(0 at var(--ox) var(--oy));
+    transition:
+      clip-path var(--dur-slow) var(--ease-in-out),
+      visibility 0s linear var(--dur-slow);
+  }
+
+  .menu[data-open='true'] {
+    visibility: visible;
+    clip-path: circle(150% at var(--ox) var(--oy));
+    transition:
+      clip-path var(--dur-slow) var(--ease-in-out),
+      visibility 0s linear 0s;
+  }
+
+  .menu-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 56px 56px;
+    background-position: -1px -1px;
+    mask-image: radial-gradient(120% 80% at 80% 0%, #000 20%, transparent 75%);
+    -webkit-mask-image: radial-gradient(120% 80% at 80% 0%, #000 20%, transparent 75%);
+  }
+
+  .menu-grid::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(40% 30% at 85% 10%, color-mix(in srgb, var(--c-magenta) 22%, transparent), transparent 70%),
+      radial-gradient(40% 30% at 10% 90%, color-mix(in srgb, var(--c-cyan) 14%, transparent), transparent 70%);
+  }
+
+  .menu-scan {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--c-cyan), transparent);
+    opacity: 0.5;
+    animation: menu-scan 6s linear infinite;
+  }
+
+  .menu-node {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    margin: -2px 0 0 -2px;
+    border-radius: 50%;
+    background: var(--c-cyan);
+    box-shadow: var(--glow-sm);
+    animation: menu-blink 2.8s var(--ease-in-out) infinite;
+  }
+
+  /* Nodes sit on grid intersections (56px cells). */
+  .menu-node--a {
+    top: calc(56px * 3);
+    left: calc(56px * 4);
+  }
+
+  .menu-node--b {
+    top: calc(56px * 6);
+    left: 56px;
+    background: var(--c-magenta);
+    box-shadow: none;
+    animation-delay: 0.9s;
+  }
+
+  .menu-node--c {
+    top: calc(56px * 2);
+    right: calc(56px * 2);
+    left: auto;
+    margin: -2px -2px 0 0;
+    animation-delay: 1.7s;
+  }
+
+  @keyframes menu-scan {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(100vh);
+    }
+  }
+
+  @keyframes menu-blink {
+    0%,
+    100% {
+      opacity: 0.25;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.6);
+    }
+  }
+
+  .menu-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-6);
+    min-height: 100%;
+    padding-top: calc(var(--header-h) + var(--sp-6));
+    padding-bottom: var(--sp-6);
+  }
+
+  .menu-list {
+    list-style: none;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .menu-list li {
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .menu-link {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-4);
+    padding-block: var(--sp-4);
+    font-family: var(--font-heading);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+
+  .menu-num {
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    transform: translateY(-0.9em);
+  }
+
+  .menu-text {
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  .menu-link :global(.menu-arrow) {
+    margin-left: auto;
+    align-self: center;
+    color: var(--text-dim);
+    transition:
+      transform var(--dur) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  .menu-link:hover .menu-text,
+  .menu-link:focus-visible .menu-text {
+    transform: translateX(var(--sp-2));
+  }
+
+  .menu-link:hover :global(.menu-arrow),
+  .menu-link:focus-visible :global(.menu-arrow) {
+    color: var(--accent);
+    transform: translate(4px, -4px);
+  }
+
+  .menu-link[aria-current='page'] .menu-text {
+    background: var(--grad-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .menu-info {
+    list-style: none;
+    padding: 0;
+    margin-top: auto;
+    display: grid;
+    gap: var(--sp-4);
+    font-size: var(--fs-sm);
+  }
+
+  .menu-info li {
+    display: grid;
+    gap: var(--sp-1);
+  }
+
+  .menu-info-label {
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .menu-info a,
+  .menu-info-text {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .menu-info a:hover {
+    color: var(--text);
+  }
+
+  .menu-info :global(svg) {
+    flex: none;
+    color: var(--accent);
+  }
+
+  @media (min-width: 640px) {
+    .menu-info {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Staggered entrance in pure CSS: works without GSAP and the global
+     reduced-motion rule neutralises it. --i is set per item in markup. */
+  .menu-link,
+  .menu-eyebrow,
+  .menu-cta,
+  .menu-info {
+    transition:
+      transform var(--dur-slow) var(--ease-out),
+      opacity var(--dur-slow) var(--ease-out);
+  }
+
+  .menu-link {
+    transform: translateY(105%);
+  }
+
+  .menu-eyebrow,
+  .menu-cta,
+  .menu-info {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  .menu[data-open='true'] .menu-link,
+  .menu[data-open='true'] .menu-eyebrow,
+  .menu[data-open='true'] .menu-cta,
+  .menu[data-open='true'] .menu-info {
+    opacity: 1;
+    transform: none;
+  }
+
+  .menu[data-open='true'] .menu-eyebrow {
+    transition-delay: 180ms;
+  }
+
+  .menu[data-open='true'] .menu-link,
+  .menu[data-open='true'] .menu-cta,
+  .menu[data-open='true'] .menu-info {
+    transition-delay: calc(260ms + var(--i, 0) * 80ms);
+  }
+</style>
+
+<script>
+  import { getLenis } from '@/scripts/motion';
+
+  const root = document.documentElement;
+  const header = document.querySelector<HTMLElement>('[data-header]');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const menu = document.querySelector<HTMLElement>('[data-menu]');
+
+  if (header && toggle && menu) {
+    const label = toggle.querySelector('[data-menu-label]');
+    const progress = header.querySelector<HTMLElement>('[data-hdr-progress]');
+    let isOpen = false;
+
+    /* ---------- Scroll: glass, hide on down / show on up, progress ---------- */
+    let lastY = window.scrollY;
+    let ticking = false;
+
+    const onScroll = () => {
+      const y = Math.max(0, window.scrollY);
+      const max = root.scrollHeight - window.innerHeight;
+      header.classList.toggle('is-scrolled', y > 8);
+      header.classList.toggle('is-past-hero', y > window.innerHeight * 0.6);
+      if (!isOpen) {
+        const delta = y - lastY;
+        const h = header.offsetHeight;
+        if (y > h * 2 && delta > 6 && !header.contains(document.activeElement)) header.classList.add('is-hidden');
+        else if (delta < -6 || y <= h) header.classList.remove('is-hidden');
+      }
+      if (progress) progress.style.transform = `scaleX(${max > 0 ? Math.min(1, y / max) : 0})`;
+      lastY = y;
+      ticking = false;
+    };
+
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(onScroll);
+      },
+      { passive: true },
+    );
+    onScroll();
+
+    // Keyboard users tabbing into a hidden header must see it.
+    header.addEventListener('focusin', () => header.classList.remove('is-hidden'));
+
+    /* ---------- Desktop sliding indicator ---------- */
+    const list = header.querySelector<HTMLElement>('[data-hdr-list]');
+    const ind = header.querySelector<HTMLElement>('[data-hdr-ind]');
+    const links = Array.from(header.querySelectorAll<HTMLAnchorElement>('[data-hdr-link]'));
+    const active = links.find((a) => a.getAttribute('aria-current') === 'page') ?? null;
+
+    if (list && ind) {
+      list.classList.add('has-ind');
+      const moveTo = (el: HTMLElement | null) => {
+        if (!el || !el.offsetWidth) {
+          ind.style.opacity = '0';
+          return;
+        }
+        const x = el.getBoundingClientRect().left - list.getBoundingClientRect().left;
+        ind.style.transform = `translateX(${x}px) scaleX(${el.offsetWidth / 100})`;
+        ind.style.opacity = '1';
+      };
+      links.forEach((a) => {
+        a.addEventListener('mouseenter', () => moveTo(a));
+        a.addEventListener('focus', () => moveTo(a));
+      });
+      list.addEventListener('mouseleave', () => moveTo(active));
+      list.addEventListener('focusout', (e) => {
+        if (!list.contains(e.relatedTarget as Node | null)) moveTo(active);
+      });
+      // Snap (no slide) whenever geometry changes: first paint, fonts loaded, resize.
+      const place = () => {
+        ind.style.transition = 'none';
+        moveTo(active);
+        void ind.offsetWidth;
+        ind.style.transition = '';
+      };
+      place();
+      document.fonts?.ready.then(place);
+      window.addEventListener('resize', place);
+    }
+
+    /* ---------- Mobile menu ---------- */
+    const focusables = () => [
+      toggle,
+      ...Array.from(menu.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')),
+    ];
+
+    // Everything outside header + menu becomes inert while the menu is open.
+    const setInertSiblings = (value: boolean) => {
+      Array.from(document.body.children).forEach((el) => {
+        if (el === header || el === menu || el.tagName === 'SCRIPT') return;
+        (el as HTMLElement).inert = value;
+      });
+    };
+
+    const setOpen = (next: boolean, restoreFocus = true) => {
+      if (next === isOpen) return;
+      isOpen = next;
+      toggle.setAttribute('aria-expanded', String(next));
+      if (label) label.textContent = next ? 'Fechar menu' : 'Abrir menu';
+      menu.dataset.open = String(next);
+      root.dataset.menu = next ? 'open' : 'closed';
+      setInertSiblings(next);
+
+      if (next) {
+        const r = toggle.getBoundingClientRect();
+        menu.style.setProperty('--ox', `${r.left + r.width / 2}px`);
+        menu.style.setProperty('--oy', `${r.top + r.height / 2}px`);
+        header.classList.remove('is-hidden');
+        getLenis()?.stop();
+        root.style.overflow = 'hidden';
+        menu.scrollTop = 0;
+        requestAnimationFrame(() =>
+          menu.querySelector<HTMLElement>('[data-menu-link]')?.focus({ preventScroll: true }),
+        );
+      } else {
+        getLenis()?.start();
+        root.style.overflow = '';
+        if (restoreFocus) toggle.focus({ preventScroll: true });
+      }
+    };
+
+    toggle.addEventListener('click', () => setOpen(!isOpen));
+    menu.querySelectorAll('a[href]').forEach((a) => a.addEventListener('click', () => setOpen(false, false)));
+
+    document.addEventListener('keydown', (e) => {
+      if (!isOpen) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setOpen(false);
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const items = focusables();
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+
+    window.matchMedia('(min-width: 960px)').addEventListener('change', (e) => {
+      if (e.matches) setOpen(false, false);
+    });
+  }
+</script>
