@@ -150,3 +150,42 @@ export const process = [
   { step: '03', title: 'Implantação', text: 'Execução organizada, documentada e sem parar sua operação.' },
   { step: '04', title: 'Monitoramento', text: 'Acompanhamento contínuo e suporte para manter tudo rodando.' },
 ] as const;
+
+// ---------------------------------------------------------------------------
+// Conversion content (Alfa techniques — see docs/ALFA-TECNICAS.md).
+
+/** Entry offer confirmed by the owner (2026-09-24). */
+export const offer = {
+  label: 'Diagnóstico gratuito',
+  title: 'Seu diagnóstico de TI é por nossa conta.',
+  emphasis: 'por nossa conta',
+  text: 'Avaliamos a infraestrutura da sua empresa, apontamos os riscos e as prioridades — e você decide depois, sem compromisso.',
+  cta: 'Agendar diagnóstico gratuito',
+  whatsappText: 'Olá FortLink! Quero agendar meu diagnóstico gratuito de TI.',
+} as const;
+
+/** Pain → solution rows, written in the customer's own voice. `slug` links to a service. */
+export const pains = [
+  { text: 'A internet cai toda semana e ninguém sabe o porquê.', slug: 'redes' },
+  { text: 'O rack virou um ninho de cabos.', slug: 'cabeamento' },
+  { text: 'Cada problema no computador para a equipe por horas.', slug: 'suporte' },
+  { text: 'Não sei quem está acessando a minha rede.', slug: 'firewall' },
+  { text: 'Só descubro a falha quando o cliente reclama.', slug: 'noc' },
+  { text: 'O Wi-Fi não pega na sala de reunião.', slug: 'wifi' },
+  { text: 'Não vejo o que acontece na empresa quando não estou lá.', slug: 'cftv' },
+  { text: 'A conta de telefone só aumenta.', slug: 'voip' },
+  { text: 'O servidor fica num canto, sem energia nem refrigeração adequadas.', slug: 'datacenter' },
+] as const;
+
+export const painsHeading = {
+  eyebrow: 'Sua TI não pode parar',
+  title: 'Não é falta de sorte.',
+  accent: 'É falta de estrutura.',
+  lead: 'Situações que todo gestor já viveu — e o serviço que resolve cada uma delas.',
+  closingLabel: 'Tudo isso com um só parceiro',
+  closing: 'Uma operação que não para.',
+} as const;
+
+/** WhatsApp message pre-filled with the service name (Alfa: per-item CTA). */
+export const serviceWhatsapp = (serviceTitle: string) =>
+  whatsappLink(`Olá FortLink! Quero saber mais sobre ${serviceTitle}.`);
