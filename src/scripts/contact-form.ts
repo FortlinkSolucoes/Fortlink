@@ -1,7 +1,7 @@
 // Contact form: accessible validation, light BR phone mask and hand-off to
 // WhatsApp (wa.me) or e-mail (mailto). No backend — without JS the form posts
 // to its mailto: action natively.
-import { site, whatsappLink } from '@/data/site';
+import { offer, site, whatsappLink } from '@/data/site';
 
 type Channel = 'whatsapp' | 'email';
 type Control = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
@@ -64,28 +64,36 @@ function buildMessage(form: HTMLFormElement) {
     empresa: get('empresa'),
     email: get('email'),
     telefone: get('telefone'),
-    servico: get('servico') || 'A definir',
+    servico: get('servico') || offer.label,
     mensagem: get('mensagem'),
   };
 
   const lines = [`Nome: ${fields.nome}`, `Empresa: ${fields.empresa}`];
   if (fields.email) lines.push(`E-mail: ${fields.email}`);
   if (fields.telefone) lines.push(`Telefone: ${fields.telefone}`);
-  lines.push(`Serviço de interesse: ${fields.servico}`, '', 'Mensagem:', fields.mensagem);
+  lines.push(`Interesse: ${fields.servico}`);
+  if (fields.mensagem) lines.push('', 'Mensagem:', fields.mensagem);
 
   return { fields, lines };
 }
 
+/** Opening line that names what the visitor picked (the diagnosis, a service or "Outro"). */
+function intro(servico: string) {
+  if (servico === offer.label) return 'Vim pelo site e quero agendar meu diagnóstico gratuito de TI.';
+  if (servico === 'Outro') return 'Vim pelo site e gostaria de conversar sobre um projeto.';
+  return `Vim pelo site e quero saber mais sobre ${servico}.`;
+}
+
 function buildWhatsApp(form: HTMLFormElement) {
-  const { lines } = buildMessage(form);
-  const text = ['Olá, FortLink! Vim pelo site e gostaria de um orçamento.', '', ...lines].join('\n');
+  const { fields, lines } = buildMessage(form);
+  const text = [`Olá, FortLink! ${intro(fields.servico)}`, '', ...lines].join('\n');
   return whatsappLink(text);
 }
 
 function buildMailto(form: HTMLFormElement) {
   const { fields, lines } = buildMessage(form);
-  const subject = `Orçamento pelo site: ${fields.empresa}`;
-  const body = ['Olá, equipe FortLink!', '', ...lines].join('\n');
+  const subject = `${fields.servico} — ${fields.empresa}`;
+  const body = ['Olá, equipe FortLink!', '', intro(fields.servico), '', ...lines].join('\n');
   return `mailto:${site.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
@@ -103,6 +111,15 @@ function initOne(panel: HTMLElement) {
   const successLink = success.querySelector<HTMLAnchorElement>('[data-success-link]');
   const reset = success.querySelector<HTMLButtonElement>('[data-contact-reset]');
   let attempted = false;
+
+  // Deep link: /contato/?servico=<slug> pre-selects that service; defaultSelected survives form.reset().
+  const select = form.querySelector<HTMLSelectElement>('[data-service-select]');
+  const slug = new URLSearchParams(window.location.search).get('servico');
+  const match = slug ? Array.from(select?.options ?? []).find((o) => o.dataset.slug === slug) : undefined;
+  if (select && match) {
+    match.defaultSelected = true;
+    select.value = match.value;
+  }
 
   // Phone mask — skip while deleting so the user can erase separators freely.
   form.querySelectorAll<HTMLInputElement>('[data-phone]').forEach((input) => {

@@ -2,6 +2,7 @@
 @import '@fontsource-variable/inter';
 @import '@fontsource/michroma';
 @import './tokens.css';
+@import './effects.css';
 
 /* ---------- Reset ---------- */
 *,

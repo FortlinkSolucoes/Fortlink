@@ -1,11 +1,15 @@
 ---
-import { site, highlights, whatsappLink } from '@/data/site';
+import { site, hero, offer, whatsappLink } from '@/data/site';
 import NetworkCanvas from '@/components/fx/NetworkCanvas.astro';
 import Button from '@/components/ui/Button.astro';
 import Icon from '@/components/ui/Icon.astro';
 import Logo from '@/components/ui/Logo.astro';
 
-const headline = 'Tecnologia segura para empresas que <span class="text-gradient">não podem parar</span>.';
+// Alfa #1: the headline closes on a full stop in the solid accent colour.
+const headline =
+  'Tecnologia segura para empresas que <span class="text-gradient">não podem <span class="hero__end">parar<span class="hero__stop">.</span></span></span>';
+// Concrete local reference (confirmed address) instead of repeating the eyebrow's city.
+const location = `${site.address.street} · ${site.address.city}`;
 ---
 
 <section class="hero" data-hero aria-labelledby="hero-title">
@@ -14,35 +18,44 @@ const headline = 'Tecnologia segura para empresas que <span class="text-gradient
     <!-- Brand continuity with the preloader: the circuit F, huge and in outline, traced on arrival. -->
     <Logo variant="mark" class="hero__brand" data-hero-brand />
     <div class="hero__grid"></div>
+    <div class="hero__glow"></div>
   </div>
 
   <div class="container hero__inner" data-hero-inner>
-    <p class="eyebrow" data-hero-in>Soluções corporativas em TI</p>
+    <p class="eyebrow" data-hero-in>Soluções em TI · {site.address.city}</p>
 
     <h1 id="hero-title" class="hero__title t-display" data-split set:html={headline} />
 
     <div class="hero__bottom">
-      <p class="hero__lead muted" data-hero-in>{site.tagline}</p>
+      <p class="hero__lead muted" data-hero-in>{hero.lead}</p>
 
       <div class="hero__actions" data-hero-in>
-        <Button href="/contato/" variant="primary" icon="arrow-right" magnetic>Solicitar orçamento</Button>
-        <Button href={whatsappLink()} variant="ghost" icon="whatsapp" external>Falar no WhatsApp</Button>
+        <Button href={whatsappLink(offer.whatsappText)} variant="primary" icon="whatsapp" external pulse magnetic>
+          {offer.cta}
+        </Button>
+        <a class="hero__more" href="/servicos/">
+          <span class="hero__more-circle" aria-hidden="true">
+            <Icon name="arrow-up-right" size={18} />
+          </span>
+          <span class="hero__more-label">Ver serviços</span>
+        </a>
       </div>
     </div>
 
-    <ul class="hero__highlights" role="list">
-      {
-        highlights.map((item) => (
-          <li data-hero-in>
-            <Icon name="check" size={16} />
-            <span>{item}</span>
-          </li>
-        ))
-      }
+    <!-- Alfa "meta" strip, 3 items: offer · proof · local reference. -->
+    <ul class="hero__meta" role="list">
+      <li class="hero__meta-offer" data-hero-in>
+        <strong>{offer.label}</strong>, sem compromisso
+      </li>
+      <li data-hero-in>{offer.modes.join(' ou ').replace('Remoto', 'remoto')}</li>
+      <li class="hero__meta-local" data-hero-in>
+        <Icon name="pin" size={16} />
+        <span>{location}</span>
+      </li>
     </ul>
   </div>
 
-  <a class="hero__scroll" href="#quem-somos" data-hero-in data-cursor="Rolar">
+  <a class="hero__scroll" href="#problemas" data-hero-in data-cursor="Rolar">
     <span class="hero__scroll-line" aria-hidden="true"><span></span></span>
     <span class="hero__scroll-label">Role para explorar</span>
   </a>
@@ -55,7 +68,7 @@ const headline = 'Tecnologia segura para empresas que <span class="text-gradient
     min-height: 100svh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-end;
     padding-block: calc(var(--header-h) + var(--sp-8)) var(--sp-9);
     overflow: clip;
   }
@@ -109,6 +122,31 @@ const headline = 'Tecnologia segura para empresas que <span class="text-gradient
     mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000, transparent);
   }
 
+  /* Accent radial rising from the bottom corner (Alfa overlay), kept faint. */
+  .hero__glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      60% 55% at 100% 100%,
+      color-mix(in srgb, var(--c-cyan) 14%, transparent),
+      transparent 70%
+    );
+  }
+
+  .hero__title {
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+  }
+
+  /* Keeps the accent full stop glued to "parar" through wrapping and SplitText. */
+  .hero__title :global(.hero__end) {
+    white-space: nowrap;
+  }
+
+  .hero__title :global(.hero__stop) {
+    color: var(--accent);
+  }
+
   .hero__inner {
     position: relative;
     z-index: var(--z-base);
@@ -138,27 +176,80 @@ const headline = 'Tecnologia segura para empresas que <span class="text-gradient
     gap: var(--sp-3);
   }
 
-  .hero__highlights {
+  .hero__actions {
+    align-items: center;
+  }
+
+  /* Secondary action: circle + ↗, text link beside it. */
+  .hero__more {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: 3.25rem;
+    padding-right: var(--sp-2);
+    font-family: var(--font-heading);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text);
+    border-radius: var(--r-pill);
+  }
+
+  .hero__more-circle {
+    display: inline-grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    transition:
+      border-color var(--dur) var(--ease-out),
+      background-color var(--dur) var(--ease-out);
+  }
+
+  .hero__more-circle :global(svg) {
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  .hero__more:is(:hover, :focus-visible) .hero__more-circle {
+    border-color: var(--accent);
+    background-color: color-mix(in srgb, var(--c-cyan) 10%, transparent);
+  }
+
+  .hero__more:is(:hover, :focus-visible) .hero__more-circle :global(svg) {
+    transform: translate(2px, -2px);
+  }
+
+  .hero__meta {
     list-style: none;
     padding: var(--sp-5) 0 0;
     margin-top: var(--sp-4);
     border-top: 1px solid var(--line);
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--sp-3) var(--sp-5);
     font-size: var(--fs-sm);
     color: var(--text-muted);
   }
 
-  .hero__highlights li {
+  .hero__meta-offer,
+  .hero__meta-local {
+    grid-column: 1 / -1;
+  }
+
+  .hero__meta-offer strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .hero__meta-local {
     display: flex;
     align-items: center;
     gap: var(--sp-2);
   }
 
-  .hero__highlights :global(svg) {
+  .hero__meta-local :global(svg) {
     flex: none;
-    color: var(--accent);
+    color: var(--text-dim);
   }
 
   .hero__scroll {
@@ -238,10 +329,17 @@ const headline = 'Tecnologia segura para empresas que <span class="text-gradient
       grid-template-columns: minmax(0, 1fr) auto;
     }
 
-    .hero__highlights {
-      grid-template-columns: repeat(4, auto);
-      justify-content: start;
-      gap: var(--sp-6);
+    .hero__meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sp-2) 0;
+    }
+
+    .hero__meta li + li::before {
+      content: '·';
+      margin-inline: var(--sp-4);
+      color: var(--text-dim);
     }
 
     .hero__scroll {

@@ -1,0 +1,253 @@
+---
+/**
+ * Alfa #5 — solid accent band that breaks the dark rhythm: the free-diagnosis offer.
+ * Solid cyan (not the brand gradient): dark text on the gradient's blue stop fails AA,
+ * on cyan it is ~10:1. Reused by the home and /servicos/.
+ */
+import '@fontsource/instrument-serif/latin-400-italic.css';
+import { offer, whatsappLink } from '@/data/site';
+import Icon from '@/components/ui/Icon.astro';
+import Logo from '@/components/ui/Logo.astro';
+
+interface Props {
+  id?: string;
+  class?: string;
+}
+
+const { id = 'diagnostico', class: className } = Astro.props;
+
+const [before, after = ''] = offer.title.split(offer.emphasis);
+---
+
+<section class:list={['offer', className]} id={id} aria-labelledby={`${id}-title`} data-wa-hide>
+  <div class="offer__grid-bg" aria-hidden="true"></div>
+
+  <div class="container offer__inner">
+    <div class="offer__head">
+      <div class="offer__brand" data-reveal="fade">
+        <Logo variant="mark" class="offer__logo" />
+        <p class="offer__eyebrow">{offer.label}</p>
+      </div>
+
+      <h2 id={`${id}-title`} class="offer__title" data-reveal="up">
+        {before}<em class="offer__em">{offer.emphasis}</em>{after}
+      </h2>
+    </div>
+
+    <div class="offer__body" data-reveal="up" data-reveal-delay="0.15">
+      <ul class="offer__chips" role="list">
+        {offer.modes.map((m) => <li>{m}</li>)}
+        <li>{offer.area}</li>
+      </ul>
+      <p class="offer__text">{offer.text}</p>
+      <a
+        class="offer__cta"
+        href={whatsappLink(offer.whatsappText)}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-magnetic
+      >
+        <Icon name="whatsapp" size={18} />
+        <span>{offer.cta}</span>
+        <span class="sr-only"> (abre em nova aba)</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .offer {
+    --ink: var(--c-night);
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    padding-block: clamp(4rem, 2.5rem + 6vw, 8rem);
+    background: var(--c-cyan);
+    color: var(--ink);
+  }
+
+  /* Faint circuit grid in ink, fading towards the text side. */
+  .offer__grid-bg {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-bg);
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--c-night) 9%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--c-night) 9%, transparent) 1px, transparent 1px);
+    background-size: 72px 72px;
+    -webkit-mask-image: radial-gradient(ellipse 60% 90% at 0% 0%, #000, transparent);
+    mask-image: radial-gradient(ellipse 60% 90% at 0% 0%, #000, transparent);
+  }
+
+  .offer__inner {
+    display: grid;
+    gap: var(--sp-7);
+  }
+
+  .offer__head {
+    display: grid;
+    gap: var(--sp-6);
+  }
+
+  .offer__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+  }
+
+  /* Logo in negative: every trace/node in ink, no fill, no halo. */
+  .offer :global(.offer__logo) {
+    --logo-h: 3rem;
+  }
+
+  .offer :global(.offer__logo .logo__mark) {
+    filter: none;
+  }
+
+  .offer :global(.offer__logo .logo-fill) {
+    display: none;
+  }
+
+  .offer :global(.offer__logo :is(.logo-trace, .logo-node--ring, .logo-node--end)) {
+    stroke: var(--ink);
+  }
+
+  .offer :global(.offer__logo .logo-node:not(.logo-node--ring)) {
+    fill: var(--ink);
+  }
+
+  .offer__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-3);
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .offer__eyebrow::before {
+    content: '';
+    width: 28px;
+    height: 1px;
+    background: currentColor;
+  }
+
+  .offer__title {
+    font-size: var(--fs-2xl);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    max-width: 16ch;
+  }
+
+  .offer__em {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.12em;
+    letter-spacing: -0.01em;
+  }
+
+  .offer__body {
+    display: grid;
+    justify-items: start;
+    align-content: end;
+    gap: var(--sp-6);
+  }
+
+  .offer__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin: 0 0 var(--sp-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .offer__chips li {
+    padding: var(--sp-1) var(--sp-3);
+    border: 1px solid color-mix(in srgb, var(--c-night) 35%, transparent);
+    border-radius: var(--r-pill);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--c-night);
+  }
+
+  .offer__text {
+    max-width: 44ch;
+    font-size: var(--fs-md);
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--c-night) 82%, transparent);
+  }
+
+  /* Dark pill CTA with a pulse ring in ink (the cyan ring of Button would vanish here). */
+  .offer__cta {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: 3.5rem;
+    padding-inline: var(--sp-6);
+    border-radius: var(--r-pill);
+    background: var(--c-night);
+    color: var(--c-white);
+    font-family: var(--font-heading);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    white-space: nowrap;
+    transition:
+      transform var(--dur) var(--ease-out),
+      background-color var(--dur) var(--ease-out);
+  }
+
+  .offer__cta :global(svg) {
+    flex: none;
+    color: var(--c-cyan);
+  }
+
+  .offer__cta:is(:hover, :focus-visible) {
+    background: var(--c-ink);
+  }
+
+  .offer__cta:active {
+    transform: scale(0.97);
+  }
+
+  .offer__cta:focus-visible {
+    outline: 2px solid var(--c-night);
+    outline-offset: 4px;
+    border-radius: var(--r-pill);
+  }
+
+  @keyframes offer-pulse {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-night) 40%, transparent);
+    }
+    70%,
+    100% {
+      box-shadow: 0 0 0 14px color-mix(in srgb, var(--c-night) 0%, transparent);
+    }
+  }
+
+  @media (max-width: 639px) {
+    .offer__cta {
+      white-space: normal;
+      text-align: left;
+    }
+  }
+
+  @media (min-width: 960px) {
+    .offer__inner {
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      align-items: end;
+      gap: var(--sp-8);
+    }
+  }
+
+  /* Infinite pulse only with motion allowed (same gate as effects.css / PulseDot). */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html:not(.reduced-motion)) .offer__cta {
+      animation: offer-pulse 2.4s var(--ease-out) infinite;
+    }
+  }
+</style>

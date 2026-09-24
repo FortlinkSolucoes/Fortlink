@@ -1,9 +1,15 @@
 ---
+/**
+ * Service card (Alfa #3): hover zooms the pictogram and reveals the scope chips;
+ * "Ver detalhes" (whole card is the hit area) opens the shared <ServiceDialog>.
+ * The chips live in the card itself, so the scope is readable without JS / by
+ * screen readers — the reveal only animates opacity/transform, never hides them.
+ */
 import GlowCard from '@/components/ui/GlowCard.astro';
 import Icon from '@/components/ui/Icon.astro';
 import ServiceIcon from '@/components/ui/ServiceIcon.astro';
 import Button from '@/components/ui/Button.astro';
-import { whatsappLink, type Service } from '@/data/site';
+import { serviceWhatsapp, type Service } from '@/data/site';
 
 type CardSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -19,75 +25,63 @@ const { slug, icon, title, summary, details } = service;
 
 const num = String(index + 1).padStart(2, '0');
 const of = String(total).padStart(2, '0');
-const panelId = `${slug}-detalhes`;
 const feature = size === 'lg' || size === 'xl';
 ---
 
-<li class:list={['svc', `svc--${size}`]} id={slug} tabindex="-1" data-svc data-open="false">
+<li class:list={['svc', `svc--${size}`]} id={slug} tabindex="-1" data-svc>
   <GlowCard as="article" class="svc__glow" flush tilt>
-      <div class="svc__inner">
-        {
-          feature && (
-            <svg class="svc__deco" viewBox="0 0 220 140" aria-hidden="true" focusable="false">
-              <path d="M0 110 H70 L100 80 H160 L190 50 H220" />
-              <path d="M40 140 V120 L60 100 H120" />
-              <path d="M130 0 V30 L150 50 H220" />
-              <circle cx="100" cy="80" r="3" />
-              <circle cx="160" cy="80" r="3" />
-              <circle cx="150" cy="50" r="3" />
-              <path class="svc__deco-pulse" d="M0 110 H70 L100 80 H160 L190 50 H220" pathLength="100" />
-            </svg>
-          )
-        }
+    <div class="svc__inner">
+      {
+        feature && (
+          <svg class="svc__deco" viewBox="0 0 220 140" aria-hidden="true" focusable="false">
+            <path d="M0 110 H70 L100 80 H160 L190 50 H220" />
+            <path d="M40 140 V120 L60 100 H120" />
+            <path d="M130 0 V30 L150 50 H220" />
+            <circle cx="100" cy="80" r="3" />
+            <circle cx="160" cy="80" r="3" />
+            <circle cx="150" cy="50" r="3" />
+            <path class="svc__deco-pulse" d="M0 110 H70 L100 80 H160 L190 50 H220" pathLength="100" />
+          </svg>
+        )
+      }
 
-        <div class="svc__top">
-          <ServiceIcon name={icon} size={feature ? 30 : 26} />
-          <span class="svc__index" aria-hidden="true">{num}<span>/{of}</span></span>
-        </div>
+      <div class="svc__top">
+        <span class="svc__media"><ServiceIcon name={icon} size={feature ? 30 : 26} /></span>
+        <span class="svc__index" aria-hidden="true">{num}<span>/{of}</span></span>
+      </div>
 
-        <h3 class="svc__title">{title}</h3>
-        <p class="svc__summary">{summary}</p>
+      <h3 class="svc__title">{title}</h3>
+      <p class="svc__summary">{summary}</p>
 
+      <ul class="svc__chips" aria-label={`O que fazemos em ${title}`}>
+        {details.map((d, i) => <li style={`--i: ${i}`}>{d}</li>)}
+      </ul>
+
+      <div class="svc__foot">
         <button
-          class="svc__toggle"
+          class="svc__open"
           type="button"
-          aria-expanded="false"
-          aria-controls={panelId}
-          data-svc-toggle
+          aria-haspopup="dialog"
+          data-svc-open={slug}
+          data-cursor="Ver"
         >
-          <span class="svc__toggle-label">O que está incluso</span>
-          <span class="sr-only"> em {title}</span>
-          <span class="svc__toggle-icon"><Icon name="plus" size={16} /></span>
+          <span class="svc__open-label">Ver detalhes</span>
+          <span class="sr-only"> de {title}</span>
+          <span class="svc__open-icon" aria-hidden="true"><Icon name="arrow-up-right" size={16} /></span>
         </button>
 
-        <div class="svc__panel" id={panelId}>
-          <div class="svc__panel-inner">
-            <ul class="svc__details">
-              {
-                details.map((d) => (
-                  <li>
-                    <Icon name="check" size={16} />
-                    <span>{d}</span>
-                  </li>
-                ))
-              }
-            </ul>
-            <Button
-              href={whatsappLink(`Olá FortLink, gostaria de saber mais sobre ${title}.`)}
-              variant="link"
-              icon="arrow-up-right"
-              external
-            >
-              Falar sobre este serviço
-            </Button>
-          </div>
-        </div>
+        <!-- Without JS the dialog can't open: offer the direct conversation instead. -->
+        <Button href={serviceWhatsapp(title)} variant="link" icon="arrow-up-right" external class="svc__nojs">
+          Falar sobre este serviço
+        </Button>
       </div>
+    </div>
   </GlowCard>
 </li>
 
 <style>
   .svc {
+    position: relative;
     list-style: none;
     display: flex;
     min-width: 0;
@@ -127,6 +121,17 @@ const feature = size === 'lg' || size === 'xl';
     justify-content: space-between;
     gap: var(--sp-4);
     margin-bottom: var(--sp-4);
+  }
+
+  /* Alfa: the "media" zooms slightly on hover. */
+  .svc__media {
+    display: inline-flex;
+    transition: transform var(--dur-slow) var(--ease-out);
+    transform-origin: 0 0;
+  }
+
+  .svc:is(:hover, :focus-within) .svc__media {
+    transform: scale(1.08);
   }
 
   .svc__index {
@@ -200,18 +205,59 @@ const feature = size === 'lg' || size === 'xl';
     }
   }
 
-  /* Disclosure */
-  .svc__toggle {
-    position: relative;
-    z-index: var(--z-base);
+  /* Scope chips. Space is always reserved (no layout shift in the bento); on
+     fine-pointer devices they rise in on hover/focus, elsewhere they're just shown. */
+  .svc__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-width: 52ch;
+  }
+
+  .svc__chips li {
+    padding: var(--sp-1) var(--sp-3);
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    font-size: var(--fs-xs);
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    :global(html.js) .svc__chips li {
+      opacity: 0;
+      transform: translateY(8px);
+      transition:
+        opacity var(--dur) var(--ease-out),
+        transform var(--dur) var(--ease-out);
+    }
+
+    :global(html.js) .svc:is(:hover, :focus-within) .svc__chips li {
+      opacity: 1;
+      transform: none;
+      transition-delay: calc(var(--i) * 50ms);
+    }
+  }
+
+  /* Footer: the button's ::after stretches over the whole card (card = hit area),
+     so the footer itself must not be the positioning context. */
+  .svc__inner > .svc__foot {
+    position: static;
+    margin-top: auto;
+    padding-top: var(--sp-3);
+    border-top: 1px solid var(--line);
+  }
+
+  .svc__open {
     display: inline-flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--sp-4);
-    margin-top: auto;
-    padding: var(--sp-3) 0;
-    border-top: 1px solid var(--line);
     width: 100%;
+    padding: var(--sp-1) 0;
     font-family: var(--font-display);
     font-size: var(--fs-xs);
     letter-spacing: 0.16em;
@@ -220,7 +266,24 @@ const feature = size === 'lg' || size === 'xl';
     color: var(--text);
   }
 
-  .svc__toggle-icon {
+  .svc__open::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-base);
+    border-radius: var(--r-lg);
+  }
+
+  .svc__open:focus-visible {
+    outline: none;
+  }
+
+  .svc__open:focus-visible::after {
+    outline: 2px solid var(--focus);
+    outline-offset: 4px;
+  }
+
+  .svc__open-icon {
     display: grid;
     place-items: center;
     flex: none;
@@ -230,101 +293,66 @@ const feature = size === 'lg' || size === 'xl';
     border: 1px solid var(--line-strong);
     transition:
       transform var(--dur) var(--ease-out),
-      background-color var(--dur) var(--ease-out),
       color var(--dur) var(--ease-out),
       border-color var(--dur) var(--ease-out);
   }
 
-  .svc__toggle:hover .svc__toggle-icon,
-  .svc__toggle:focus-visible .svc__toggle-icon {
+  .svc:is(:hover, :focus-within) .svc__open-icon {
     border-color: var(--c-cyan);
     color: var(--c-cyan);
+    transform: rotate(45deg);
   }
 
-  .svc__toggle[aria-expanded='true'] .svc__toggle-icon {
-    transform: rotate(135deg);
-    background: var(--c-cyan);
-    border-color: var(--c-cyan);
-    color: var(--c-night);
-  }
-
-  /* Height animates via grid rows 0fr → 1fr (no JS measuring).
-     Without JS the details are simply shown and the toggle is hidden. */
-  .svc__panel {
-    display: grid;
-    grid-template-rows: 1fr;
-  }
-
-  .svc__panel-inner {
-    min-height: 0;
-    overflow: hidden;
-    display: grid;
-    gap: var(--sp-5);
-    align-content: start;
-  }
-
-  :global(html:not(.js)) .svc__toggle {
+  :global(html.js) .svc__foot :global(.svc__nojs),
+  :global(html:not(.js)) .svc__open {
     display: none;
   }
 
-  :global(html.js) .svc__panel {
-    grid-template-rows: 0fr;
-    visibility: hidden;
-    transition:
-      grid-template-rows var(--dur) var(--ease-in-out),
-      visibility 0s linear var(--dur);
-  }
-
-  :global(html.js) .svc__panel-inner {
+  /* Deep-link highlight (/servicos/#slug): brief border pulse around the card. */
+  .svc::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 1px solid var(--c-cyan);
+    border-radius: calc(var(--r-lg) + 4px);
     opacity: 0;
-    transform: translateY(-8px);
-    transition:
-      opacity var(--dur-fast) var(--ease-out),
-      transform var(--dur) var(--ease-out);
+    pointer-events: none;
   }
 
-  :global(html.js) .svc[data-open='true'] .svc__panel {
-    grid-template-rows: 1fr;
-    visibility: visible;
-    transition:
-      grid-template-rows var(--dur-slow) var(--ease-out),
-      visibility 0s;
+  .svc[data-flash]::before {
+    animation: svc-flash 0.9s var(--ease-out) 2;
   }
 
-  :global(html.js) .svc[data-open='true'] .svc__panel-inner {
-    opacity: 1;
-    transform: none;
-    transition:
-      opacity var(--dur) var(--ease-out) 120ms,
-      transform var(--dur-slow) var(--ease-out) 80ms;
+  @keyframes svc-flash {
+    0% {
+      opacity: 0;
+      transform: scale(0.99);
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-cyan) 40%, transparent);
+    }
+    30% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.015);
+      box-shadow: 0 0 0 10px transparent;
+    }
   }
 
-  .svc__details {
-    display: grid;
-    gap: var(--sp-3);
-    padding: var(--sp-2) 0 0;
-    list-style: none;
-  }
+  @media (prefers-reduced-motion: reduce) {
+    .svc__media,
+    .svc__open-icon {
+      transition: none;
+    }
 
-  .svc__details li {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--sp-3);
-    color: var(--text);
-    font-size: var(--fs-sm);
-  }
+    .svc:is(:hover, :focus-within) .svc__media {
+      transform: none;
+    }
 
-  .svc__details li :global(svg) {
-    flex: none;
-    margin-top: 0.2em;
-    color: var(--c-cyan);
-  }
-
-  @media (min-width: 640px) {
-    .svc--lg .svc__details,
-    .svc--xl .svc__details {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      column-gap: var(--sp-6);
+    /* Static highlight instead of a pulse; the script removes it after a moment. */
+    .svc[data-flash]::before {
+      animation: none;
+      opacity: 1;
     }
   }
 </style>

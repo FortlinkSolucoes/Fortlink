@@ -1,5 +1,5 @@
 ---
-import { nav, site, whatsappLink } from '@/data/site';
+import { nav, offer, site, whatsappLink } from '@/data/site';
 import Logo from '@/components/ui/Logo.astro';
 import Button from '@/components/ui/Button.astro';
 import Icon from '@/components/ui/Icon.astro';
@@ -7,6 +7,7 @@ import Icon from '@/components/ui/Icon.astro';
 const path = Astro.url.pathname.replace(/\/?$/, '/');
 const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
 const isHome = path === '/';
+const offerHref = whatsappLink(offer.whatsappText);
 const addressLine = `${site.address.street} — ${site.address.city}/${site.address.state}`;
 ---
 
@@ -34,7 +35,7 @@ const addressLine = `${site.address.street} — ${site.address.city}/${site.addr
     </nav>
 
     <div class="hdr-cta">
-      <Button href="/contato/" variant="primary" icon="arrow-up-right" magnetic>Solicitar orçamento</Button>
+      <Button href={offerHref} variant="primary" icon="whatsapp" external magnetic pulse>{offer.label}</Button>
     </div>
 
     <button class="hdr-toggle" type="button" aria-expanded="false" aria-controls="menu-mobile" data-menu-toggle>
@@ -75,7 +76,7 @@ const addressLine = `${site.address.street} — ${site.address.city}/${site.addr
     </nav>
 
     <div class="menu-cta" style={`--i:${nav.length}`}>
-      <Button href="/contato/" variant="primary" icon="arrow-right">Solicitar orçamento</Button>
+      <Button href={offerHref} variant="primary" icon="whatsapp" external>{offer.cta}</Button>
     </div>
 
     <ul class="menu-info" style={`--i:${nav.length + 1}`}>
@@ -316,6 +317,13 @@ const addressLine = `${site.address.street} — ${site.address.city}/${site.addr
       transition:
         opacity var(--dur) var(--ease-out),
         visibility 0s linear 0s;
+    }
+
+    /* One pulsing CTA per view: when the hero, the offer band or the footer CTA is on
+       screen (html.cta-in-view, set by WhatsAppFloat), the header button goes still. */
+    :global(html.cta-in-view) .hdr-cta :global(.btn__ring) {
+      animation: none;
+      opacity: 0;
     }
 
     .hdr--home:not(.is-past-hero) .hdr-cta {

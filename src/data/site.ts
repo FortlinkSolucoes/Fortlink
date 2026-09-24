@@ -103,7 +103,7 @@ export const services: Service[] = [
     icon: 'noc',
     title: 'Monitoramento NOC',
     summary: 'Monitoramento contínuo da infraestrutura para identificar falhas antes de impactar sua empresa.',
-    details: ['Monitoramento 24/7', 'Alertas proativos', 'Dashboards de disponibilidade', 'Relatórios periódicos'],
+    details: ['Monitoramento contínuo', 'Alertas proativos', 'Dashboards de disponibilidade', 'Relatórios periódicos'],
   },
   {
     slug: 'wifi',
@@ -114,14 +114,24 @@ export const services: Service[] = [
   },
 ];
 
-export const highlights = ['Atendimento ágil', 'Monitoramento contínuo', 'Soluções empresariais', 'Equipe especializada'] as const;
+export const highlights = ['Atendimento ágil', 'Monitoramento contínuo', 'Equipe especializada'] as const;
+
+/** /servicos/ hero lead: what the page is, ending on the entry offer. */
+export const servicesPage = {
+  eyebrow: 'Da rede ao datacenter',
+  lead: 'Infraestrutura, suporte, segurança e monitoramento para empresas de Foz do Iguaçu. Não sabe qual serviço precisa? Comece pelo diagnóstico gratuito.',
+} as const;
+
+/** Home hero copy. The generic site.tagline stays for SEO only. */
+export const hero = {
+  lead: 'Redes, suporte técnico, CFTV e monitoramento para empresas de Foz do Iguaçu. Comece por um diagnóstico gratuito da sua TI.',
+} as const;
 
 export const about = {
   title: 'Tecnologia para sua empresa crescer sem interrupções.',
   paragraphs: [
     'Somos um Hub de Tecnologia com o objetivo de sustentar toda a operação tecnológica da sua empresa, para que você possa se concentrar no que realmente importa: o crescimento do seu negócio.',
     'Atuamos em infraestrutura de TI, suporte técnico, redes corporativas, cabeamento estruturado, monitoramento, locação de equipamentos e soluções tecnológicas personalizadas — de pequenas empresas a ambientes corporativos de alta demanda.',
-    'Nosso compromisso vai além do suporte técnico: construímos parcerias sólidas, entendendo as necessidades de cada cliente para desenvolver soluções que aumentem a produtividade, reduzam riscos e garantam desempenho operacional.',
   ],
   mission: 'Oferecer soluções tecnológicas inteligentes que impulsionem o crescimento e a eficiência das empresas.',
   vision: 'Ser referência em soluções de tecnologia, reconhecida pela qualidade, inovação e confiança.',
@@ -159,7 +169,10 @@ export const offer = {
   label: 'Diagnóstico gratuito',
   title: 'Seu diagnóstico de TI é por nossa conta.',
   emphasis: 'por nossa conta',
-  text: 'Avaliamos a infraestrutura da sua empresa, apontamos os riscos e as prioridades — e você decide depois, sem compromisso.',
+  text: 'Avaliamos a infraestrutura de TI da sua empresa, apontamos os riscos e as prioridades — e você decide depois, sem compromisso.',
+  // Confirmed by the owner (2026-09-24): in person and remote, Foz do Iguaçu and region.
+  modes: ['Presencial', 'Remoto'],
+  area: 'Foz do Iguaçu e região',
   cta: 'Agendar diagnóstico gratuito',
   whatsappText: 'Olá FortLink! Quero agendar meu diagnóstico gratuito de TI.',
 } as const;
@@ -168,22 +181,24 @@ export const offer = {
 export const pains = [
   { text: 'A internet cai toda semana e ninguém sabe o porquê.', slug: 'redes' },
   { text: 'O rack virou um ninho de cabos.', slug: 'cabeamento' },
-  { text: 'Cada problema no computador para a equipe por horas.', slug: 'suporte' },
+  { text: 'Qualquer problema no computador deixa a equipe parada por horas.', slug: 'suporte' },
   { text: 'Não sei quem está acessando a minha rede.', slug: 'firewall' },
   { text: 'Só descubro a falha quando o cliente reclama.', slug: 'noc' },
   { text: 'O Wi-Fi não pega na sala de reunião.', slug: 'wifi' },
   { text: 'Não vejo o que acontece na empresa quando não estou lá.', slug: 'cftv' },
   { text: 'A conta de telefone só aumenta.', slug: 'voip' },
-  { text: 'O servidor fica num canto, sem energia nem refrigeração adequadas.', slug: 'datacenter' },
+  { text: 'O servidor fica num canto quente, sem nobreak.', slug: 'datacenter' },
 ] as const;
 
 export const painsHeading = {
-  eyebrow: 'Sua TI não pode parar',
+  eyebrow: 'Soa familiar?',
   title: 'Não é falta de sorte.',
   accent: 'É falta de estrutura.',
   lead: 'Situações que todo gestor já viveu — e o serviço que resolve cada uma delas.',
   closingLabel: 'Tudo isso com um só parceiro',
   closing: 'Uma operação que não para.',
+  // Honest message for the 'Falar no WhatsApp' button (the offer CTA lives in OfferBand).
+  whatsappText: 'Olá FortLink! Vi a lista de problemas no site e quero conversar sobre a TI da minha empresa.',
 } as const;
 
 /** WhatsApp message pre-filled with the service name (Alfa: per-item CTA). */

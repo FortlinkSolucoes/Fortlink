@@ -18,7 +18,7 @@ const count = String(services.length).padStart(2, '0');
         align="left"
       />
       <p class="grid-section__hint muted">
-        Abra <strong>“O que está incluso”</strong> para ver o escopo de cada serviço.
+        Toque em <strong>“Ver detalhes”</strong> para ver o escopo e falar direto com a equipe.
       </p>
     </div>
 
@@ -65,7 +65,10 @@ const count = String(services.length).padStart(2, '0');
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--sp-5);
     }
+  }
 
+  /* Tablet only: the lead card goes full width. Capped so it can't outrank the 12-col spans below. */
+  @media (min-width: 640px) and (max-width: 959px) {
     .bento > :global(.svc:first-child) {
       grid-column: span 2;
     }
@@ -109,42 +112,28 @@ const count = String(services.length).padStart(2, '0');
 
   const cards = [...document.querySelectorAll<HTMLElement>('[data-svc]')];
 
-  // ---- Disclosure (works regardless of motion preferences) ----
-  let refreshTimer = 0;
-  const refreshLater = () => {
-    window.clearTimeout(refreshTimer);
-    // Wait for the height transition so ScrollTriggers below get correct positions.
-    refreshTimer = window.setTimeout(() => ScrollTrigger.refresh(), 950);
-  };
-
-  function setOpen(card: HTMLElement, open: boolean) {
-    const btn = card.querySelector<HTMLButtonElement>('[data-svc-toggle]');
-    if (!btn || (card.dataset.open === 'true') === open) return;
-    card.dataset.open = String(open);
-    btn.setAttribute('aria-expanded', String(open));
-    refreshLater();
+  // ---- Deep-link highlight: /servicos/#slug (and ServicesNav jumps) pulse the card border ----
+  const flashTimers = new WeakMap<HTMLElement, number>();
+  function flash(card: HTMLElement) {
+    window.clearTimeout(flashTimers.get(card));
+    card.removeAttribute('data-flash');
+    void card.offsetWidth; // restart the CSS animation
+    card.setAttribute('data-flash', '');
+    flashTimers.set(card, window.setTimeout(() => card.removeAttribute('data-flash'), 2000));
   }
 
-  cards.forEach((card) => {
-    card
-      .querySelector<HTMLButtonElement>('[data-svc-toggle]')
-      ?.addEventListener('click', () => setOpen(card, card.dataset.open !== 'true'));
-    card.addEventListener('svc:open', () => setOpen(card, true));
-    card.addEventListener('keydown', (e) => {
-      if (e.key !== 'Escape' || card.dataset.open !== 'true') return;
-      setOpen(card, false);
-      card.querySelector<HTMLButtonElement>('[data-svc-toggle]')?.focus();
-    });
-  });
+  cards.forEach((card) => card.addEventListener('svc:open', () => flash(card)));
 
-  // Deep links like /servicos/#cftv open that card.
-  const openFromHash = () => {
+  const flashFromHash = () => {
     const id = decodeURIComponent(location.hash.slice(1));
     const card = cards.find((c) => c.id === id);
-    if (card) setOpen(card, true);
+    if (card) flash(card);
   };
-  openFromHash();
-  window.addEventListener('hashchange', openFromHash);
+  // On first load, wait for the native jump to settle so the pulse is seen.
+  const initialFlash = () => window.setTimeout(flashFromHash, 400);
+  if (document.readyState === 'complete') initialFlash();
+  else window.addEventListener('load', initialFlash, { once: true });
+  window.addEventListener('hashchange', flashFromHash);
 
   // ---- Motion ----
   onMotionReady(() => {

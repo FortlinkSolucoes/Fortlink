@@ -13,7 +13,7 @@ const total = String(services.length).padStart(2, '0');
     <div class="container services__head">
       <SectionHeading
         eyebrow="O que fazemos"
-        title='Soluções completas para <span class="text-gradient">toda a sua operação</span>.'
+        title='Nove serviços, <span class="text-gradient">um só parceiro de TI</span>.'
       />
       <div class="services__meta">
         <p class="services__count" aria-hidden="true">
@@ -45,6 +45,15 @@ const total = String(services.length).padStart(2, '0');
                   <li>{d}</li>
                 ))}
               </ul>
+              <Button
+                href={`/servicos/?abrir=${s.slug}`}
+                variant="link"
+                icon="arrow-right"
+                class="service-card__more"
+                aria-label={`Ver detalhes de ${s.title}`}
+              >
+                Ver detalhes
+              </Button>
             </GlowCard>
           ))
         }
@@ -159,6 +168,23 @@ const total = String(services.length).padStart(2, '0');
     align-items: center;
     justify-content: space-between;
     margin-bottom: var(--sp-4);
+  }
+
+  /* Deep link into the /servicos/ modal (?abrir=slug). Sits at the card foot. */
+  .services :global(.service-card__more) {
+    align-self: flex-start;
+    margin-top: var(--sp-5);
+  }
+
+  .service-card__details + :global(.service-card__more) {
+    margin-top: var(--sp-4);
+  }
+
+  @media (max-width: 1023.98px) {
+    .services :global(.service-card__more) {
+      margin-top: auto;
+      padding-top: var(--sp-4);
+    }
   }
 
   .service-card__title {

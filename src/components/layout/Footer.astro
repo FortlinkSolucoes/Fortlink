@@ -1,8 +1,10 @@
 ---
+import '@fontsource/instrument-serif/latin-400-italic.css';
 import { nav, services, site, whatsappLink } from '@/data/site';
 import Logo from '@/components/ui/Logo.astro';
 import Button from '@/components/ui/Button.astro';
 import Icon from '@/components/ui/Icon.astro';
+import PulseDot from '@/components/ui/PulseDot.astro';
 
 interface Props {
   /** Big closing CTA. Turn off on pages that already end with their own call to action. */
@@ -13,16 +15,18 @@ const { cta = true } = Astro.props;
 const { street, zip, city, state } = site.address;
 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${street}, ${city} - ${state}, ${zip}`)}`;
 const wordmark = site.shortName.toUpperCase();
+// Alfa #6 "human location" close: who and where, not a second copy of the offer (OfferBand owns it).
+const telHref = `tel:+${site.whatsapp}`;
 ---
 
 <footer class:list={['ftr', { 'ftr--no-cta': !cta }]} data-footer>
   <div class="ftr-bg" aria-hidden="true"></div>
 
   {cta && (
-  <section class="container ftr-cta" aria-labelledby="ftr-cta-title" data-ftr-cta>
-    <p class="eyebrow">Próximo passo</p>
-    <h2 id="ftr-cta-title" class="ftr-title t-display" data-split="chars">
-      Vamos <span class="text-gradient">conectar</span> sua empresa?
+  <section class="container ftr-cta" aria-labelledby="ftr-cta-title" data-ftr-cta data-wa-hide>
+    <PulseDot as="p" label={`${city} · ${state}`} class="ftr-badge" />
+    <h2 id="ftr-cta-title" class="ftr-title t-display" data-split>
+      O melhor jeito de entender é <em class="ftr-em">conversar</em> com a gente.
     </h2>
 
     <div class="ftr-link" aria-hidden="true">
@@ -40,10 +44,15 @@ const wordmark = site.shortName.toUpperCase();
       <span class="ftr-node"></span><span class="ftr-node"></span>
     </div>
 
-    <p class="ftr-lead muted">{site.tagline}</p>
+    <p class="ftr-lead muted">
+      Estamos na <a class="ftr-lead-link" href={mapsUrl} target="_blank" rel="noopener noreferrer">{street}, {city}<span class="sr-only"> (ver no mapa, abre em nova aba)</span></a>.
+      Chame no WhatsApp ou ligue: {site.whatsappDisplay}.
+    </p>
     <div class="ftr-actions">
-      <Button href="/contato/" variant="primary" icon="arrow-right" magnetic>Solicitar orçamento</Button>
-      <Button href={whatsappLink()} variant="ghost" icon="whatsapp" external>Chamar no WhatsApp</Button>
+      <Button href={whatsappLink()} variant="primary" icon="whatsapp" external magnetic>
+        Falar no WhatsApp
+      </Button>
+      <Button href={telHref} variant="ghost" icon="phone">Ligar {site.whatsappDisplay}</Button>
     </div>
   </section>
   )}
@@ -190,6 +199,33 @@ const wordmark = site.shortName.toUpperCase();
     padding-block: var(--section-y);
   }
 
+  /* Offer label as a glass pill around the shared live dot. */
+  .ftr-cta :global(.ftr-badge) {
+    padding: var(--sp-2) var(--sp-4);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-pill);
+    background: var(--bg-elev);
+  }
+
+  .ftr-title {
+    max-width: 18ch;
+    text-wrap: balance;
+  }
+
+  /* The one accent: serif italic emphasis (Alfa technique), in the brand gradient. */
+  .ftr-em {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.08em; /* serif x-height is smaller than Sora's */
+    letter-spacing: -0.01em;
+    padding-inline: 0.04em 0.1em; /* keep the italic overhang inside the clipped background */
+    background: var(--grad-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
   .ftr--no-cta .ftr-grid {
     border-top: 0;
   }
@@ -262,6 +298,18 @@ const wordmark = site.shortName.toUpperCase();
   .ftr-lead {
     max-width: 48ch;
     font-size: var(--fs-md);
+  }
+
+  .ftr-lead-link {
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 4px;
+    transition: text-decoration-color var(--dur-fast) var(--ease-out);
+  }
+
+  .ftr-lead-link:is(:hover, :focus-visible) {
+    text-decoration-color: var(--c-cyan);
   }
 
   .ftr-actions {

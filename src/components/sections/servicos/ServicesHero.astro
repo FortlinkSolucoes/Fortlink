@@ -1,7 +1,7 @@
 ---
 import SectionHeading from '@/components/ui/SectionHeading.astro';
 import Icon from '@/components/ui/Icon.astro';
-import { site, services } from '@/data/site';
+import { services, servicesPage } from '@/data/site';
 
 type Pt = readonly [number, number];
 
@@ -89,9 +89,9 @@ const total = String(services.length).padStart(2, '0');
     <div class="hero__heading">
       <SectionHeading
         as="h1"
-        eyebrow="Operação sempre conectada"
+        eyebrow={servicesPage.eyebrow}
         title={'Nossos <span class="text-gradient">serviços</span>'}
-        lead={site.description}
+        lead={servicesPage.lead}
       />
     </div>
 

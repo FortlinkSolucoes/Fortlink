@@ -5,6 +5,12 @@
  * - ghost:   glass pill with a 1px gradient border.
  * - link:    inline text link with an animated underline.
  * Renders <a> when `href` is set, otherwise <button>. Slot = label.
+ *
+ * Conversion extras (Alfa techniques):
+ * - `pulse`: slow cyan ring pulsing around the pill (Alfa `pulsoBotao`). primary/ghost only.
+ * - `arrow`: trailing arrow ('right' | 'up-right') that "pushes" 5px (Alfa `setaVai`) —
+ *   in loop when `pulse`, otherwise on hover/focus. Overrides `icon`.
+ * All loops are off under reduced motion (see styles/effects.css).
  */
 import Icon, { type UiIconName } from './Icon.astro';
 
@@ -12,6 +18,8 @@ interface Props {
   href?: string;
   variant?: 'primary' | 'ghost' | 'link';
   icon?: UiIconName;
+  arrow?: 'right' | 'up-right';
+  pulse?: boolean;
   external?: boolean;
   magnetic?: boolean;
   class?: string;
@@ -24,6 +32,8 @@ const {
   href,
   variant = 'primary',
   icon,
+  arrow,
+  pulse = false,
   external = false,
   magnetic = false,
   class: className,
@@ -32,39 +42,42 @@ const {
   ...rest
 } = Astro.props;
 
-const classes = ['btn', `btn--${variant}`, `btn--${size}`, className];
+const iconName: UiIconName | undefined = arrow ? (`arrow-${arrow}` as const) : icon;
+const showRing = pulse && variant !== 'link';
+
+const classes = [
+  'btn',
+  `btn--${variant}`,
+  `btn--${size}`,
+  { 'btn--pulse': showRing, 'btn--arrow': Boolean(arrow) },
+  className,
+];
 const magneticAttr = magnetic ? { 'data-magnetic': '' } : {};
-const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+const externalAttrs = href && external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+const Tag = href ? 'a' : 'button';
+const tagAttrs = href ? { href } : { type };
 ---
 
-{
-  href ? (
-    <a href={href} class:list={classes} {...externalAttrs} {...magneticAttr} {...rest}>
-      <span class="btn__label">
-        <slot />
-      </span>
-      {icon && (
-        <span class="btn__icon" aria-hidden="true">
-          <Icon name={icon} size={18} class="btn__icon-a" />
-          <Icon name={icon} size={18} class="btn__icon-b" />
+<Tag {...tagAttrs} class:list={classes} {...externalAttrs} {...magneticAttr} {...rest}>
+  {showRing && <span class="btn__ring u-pulse-ring" aria-hidden="true" />}
+  <span class="btn__label">
+    <slot />
+  </span>
+  {
+    iconName &&
+      (arrow ? (
+        <span class:list={['btn__icon', 'btn__icon--nudge', `btn__icon--${arrow}`]} aria-hidden="true">
+          <Icon name={iconName} size={18} />
         </span>
-      )}
-      {external && <span class="sr-only"> (abre em nova aba)</span>}
-    </a>
-  ) : (
-    <button type={type} class:list={classes} {...magneticAttr} {...rest}>
-      <span class="btn__label">
-        <slot />
-      </span>
-      {icon && (
+      ) : (
         <span class="btn__icon" aria-hidden="true">
-          <Icon name={icon} size={18} class="btn__icon-a" />
-          <Icon name={icon} size={18} class="btn__icon-b" />
+          <Icon name={iconName} size={18} class="btn__icon-a" />
+          <Icon name={iconName} size={18} class="btn__icon-b" />
         </span>
-      )}
-    </button>
-  )
-}
+      ))
+  }
+  {href && external && <span class="sr-only"> (abre em nova aba)</span>}
+</Tag>
 
 <style>
   .btn {
@@ -319,6 +332,32 @@ const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' 
 
   .btn--link:active {
     transform: none;
+  }
+
+  /* ---------- Pulse ring (Alfa pulsoBotao) ---------- */
+  .btn__ring {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  /* ---------- Arrow push (Alfa setaVai) ---------- */
+  .btn__icon--nudge {
+    overflow: visible;
+  }
+
+  .btn__icon--up-right {
+    --nudge-x: 4px;
+    --nudge-y: -4px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html:not(.reduced-motion)) .btn--pulse .btn__icon--nudge :global(svg),
+    :global(html:not(.reduced-motion)) .btn--arrow:is(:hover, :focus-visible) .btn__icon--nudge :global(svg) {
+      animation: fl-nudge 1.6s var(--ease-in-out) infinite;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

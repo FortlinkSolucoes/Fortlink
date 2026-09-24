@@ -1,20 +1,20 @@
 ---
-import { site, whatsappLink } from '@/data/site';
+import { offer, site, whatsappLink } from '@/data/site';
 import Icon from '@/components/ui/Icon.astro';
 ---
 
 <a
   class="wa"
-  href={whatsappLink()}
+  href={whatsappLink(offer.whatsappText)}
   target="_blank"
   rel="noopener noreferrer"
-  aria-label={`Conversar com a ${site.shortName} no WhatsApp (abre em nova aba)`}
+  aria-label={`${offer.label}: fale com a ${site.shortName} no WhatsApp (abre em nova aba)`}
   data-wa-float
 >
   <span class="wa-ring" aria-hidden="true"></span>
   <span class="wa-btn" aria-hidden="true"><Icon name="whatsapp" size={26} /></span>
   <span class="wa-tip" aria-hidden="true">
-    <span class="wa-tip-dot"></span>Fale com a gente
+    <span class="wa-tip-dot"></span>{offer.label}
   </span>
 </a>
 
@@ -147,22 +147,41 @@ import Icon from '@/components/ui/Icon.astro';
 </style>
 
 <script>
+  /*
+   * Hierarchy: one WhatsApp CTA per view. The float stays away while the hero
+   * (which owns the primary CTA) or any block that carries its own WhatsApp CTA
+   * ([data-wa-hide]: OfferBand, footer CTA) is on screen, and before 300px of scroll.
+   */
   const btn = document.querySelector<HTMLElement>('[data-wa-float]');
   if (btn) {
+    const covering = new Set<Element>();
     let ticking = false;
     const update = () => {
-      btn.classList.toggle('is-visible', window.scrollY > 300);
+      btn.classList.toggle('is-visible', window.scrollY > 300 && covering.size === 0);
+      // Lets the header CTA drop its pulse while another CTA owns the view.
+      document.documentElement.classList.toggle('cta-in-view', covering.size > 0);
       ticking = false;
     };
-    window.addEventListener(
-      'scroll',
-      () => {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(update);
-      },
-      { passive: true },
-    );
+    const schedule = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+    const targets = document.querySelectorAll('[data-hero], [data-wa-hide]');
+    if (targets.length && 'IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) covering.add(e.target);
+            else covering.delete(e.target);
+          }
+          schedule();
+        },
+        { rootMargin: '0px 0px -15% 0px' },
+      );
+      targets.forEach((t) => io.observe(t));
+    }
+    window.addEventListener('scroll', schedule, { passive: true });
     update();
   }
 </script>

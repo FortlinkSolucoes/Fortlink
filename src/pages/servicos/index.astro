@@ -4,12 +4,15 @@ import ServicesHero from '@/components/sections/servicos/ServicesHero.astro';
 import ServicesGrid from '@/components/sections/servicos/ServicesGrid.astro';
 import ServicesDifferentials from '@/components/sections/servicos/ServicesDifferentials.astro';
 import ProcessTimeline from '@/components/sections/shared/ProcessTimeline.astro';
-import ServicesCta from '@/components/sections/servicos/ServicesCta.astro';
+import ServiceDialog from '@/components/sections/servicos/ServiceDialog.astro';
+import OfferBand from '@/components/sections/shared/OfferBand.astro';
 import { site, services } from '@/data/site';
 
 const description = `Serviços de TI corporativa em ${site.address.city} — ${site.address.state}: ${services.map((s) => s.title).join(', ')}.`;
 
-// The page closes with ServicesCta, so the footer skips its own big CTA (footerCta={false}).
+// The page closes with OfferBand (free diagnosis) instead of the old generic ServicesCta:
+// two stacked CTA panels diluted each other, and the concrete zero-risk offer converts
+// better (Alfa #5). It is the closer, so the footer skips its own big CTA (footerCta={false}).
 
 // Structured data: the service catalog offered by the business.
 const jsonLd = {
@@ -36,6 +39,7 @@ const jsonLd = {
   <ServicesGrid />
   <ServicesDifferentials />
   <ProcessTimeline tight />
-  <ServicesCta />
+  <OfferBand />
+  <ServiceDialog />
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 </BaseLayout>

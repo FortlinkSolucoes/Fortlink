@@ -1,7 +1,8 @@
 ---
 import GlowCard from '@/components/ui/GlowCard.astro';
 import Icon from '@/components/ui/Icon.astro';
-import { site, whatsappLink } from '@/data/site';
+import '@fontsource/instrument-serif/latin-400-italic.css';
+import { offer, site, whatsappLink } from '@/data/site';
 
 const { street, zip, city, state } = site.address;
 const mapsQuery = encodeURIComponent(`${street}, ${city} - ${state}, ${zip}`);
@@ -12,7 +13,7 @@ const channels = [
     label: 'WhatsApp',
     value: site.whatsappDisplay,
     note: 'Resposta direta com nossa equipe',
-    href: whatsappLink(),
+    href: whatsappLink(offer.whatsappText),
     external: true,
   },
   {
@@ -34,14 +35,15 @@ const channels = [
 ] as const;
 ---
 
-<div class="intro">
+<div class="intro" data-wa-hide>
   <p class="eyebrow" data-reveal="fade">Contato</p>
   <h1 id="contato-titulo" class="intro__title t-display" data-split>
-    Vamos conectar <span class="text-gradient">sua empresa</span>.
+    <!-- Period inside the <em>: SplitText would otherwise split it off as its own word, leaving a gap. -->
+    O melhor jeito de começar é <em class="intro__em">uma conversa.</em>
   </h1>
   <p class="intro__lead muted" data-reveal>
-    Conte o que você precisa — da rede ao datacenter. Nossa equipe analisa o seu cenário e retorna com um
-    caminho claro, sem enrolação.
+    Conte como está a TI da sua empresa hoje — da rede ao datacenter. A resposta vem direto da
+    FortLink, aqui em {site.address.city}, com um caminho claro e sem enrolação.
   </p>
 
   <ul class="channels" data-stagger role="list">
@@ -59,7 +61,7 @@ const channels = [
             </span>
             <span class="channel__body">
               <span class="channel__label">{c.label}</span>
-              <span class="channel__value">{c.value}</span>
+              <span class:list={['channel__value', c.icon === 'mail' && 'channel__value--email']}>{c.value}</span>
               <span class="channel__note">{c.note}</span>
             </span>
             <span class="channel__arrow" aria-hidden="true">
@@ -83,6 +85,20 @@ const channels = [
 
   .intro__title {
     margin-top: var(--sp-2);
+  }
+
+  /* Serif italic emphasis (Alfa technique) — the single accent of this block. */
+  .intro__em {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.08em;
+    letter-spacing: -0.01em;
+    padding-inline: 0.04em 0.1em;
+    background: var(--grad-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
   .intro__lead {
@@ -144,6 +160,13 @@ const channels = [
     color: var(--text);
     overflow-wrap: anywhere;
     line-height: 1.25;
+  }
+
+  /* The e-mail is long: shrink it rather than break mid-domain. */
+  .channel__value--email {
+    font-size: clamp(0.9rem, 0.7rem + 1.1vw, 1.15rem);
+    overflow-wrap: normal;
+    white-space: nowrap;
   }
 
   .channel__note {

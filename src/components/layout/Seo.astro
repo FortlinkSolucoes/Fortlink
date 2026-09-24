@@ -1,5 +1,5 @@
 ---
-import { site } from '@/data/site';
+import { site, offer } from '@/data/site';
 
 interface Props {
   title: string;
@@ -42,7 +42,10 @@ const jsonLd = {
     addressRegion: site.address.state,
     addressCountry: 'BR',
   },
-  areaServed: { '@type': 'City', name: site.address.city },
+  areaServed: [
+    { '@type': 'City', name: site.address.city },
+    { '@type': 'AdministrativeArea', name: offer.area },
+  ],
   contactPoint: {
     '@type': 'ContactPoint',
     telephone,

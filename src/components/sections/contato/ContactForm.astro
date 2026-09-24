@@ -1,12 +1,14 @@
 ---
 import Button from '@/components/ui/Button.astro';
-import { site, services } from '@/data/site';
+import RunBorder from '@/components/ui/RunBorder.astro';
+import PulseDot from '@/components/ui/PulseDot.astro';
+import { offer, site, services } from '@/data/site';
 
 // Without JS the form falls back to a plain mailto submission.
 const fallbackAction = `mailto:${site.email}?subject=${encodeURIComponent('Contato pelo site')}`;
 ---
 
-<div class="panel" data-contact-panel data-state="idle" data-reveal="right">
+<div class="panel" data-contact-panel data-state="idle" data-reveal="right" data-wa-hide>
   <div class="panel__inner">
     <form
       class="form"
@@ -16,8 +18,15 @@ const fallbackAction = `mailto:${site.email}?subject=${encodeURIComponent('Conta
       aria-labelledby="form-titulo"
       data-contact-form
     >
+      <RunBorder class="offer">
+        <div class="offer__body">
+          <PulseDot as="p" label={offer.label} class="offer__label" static />
+          <p class="offer__text">{offer.text}</p>
+        </div>
+      </RunBorder>
+
       <header class="form__head">
-        <h2 id="form-titulo" class="form__title">Solicite um orçamento</h2>
+        <h2 id="form-titulo" class="form__title">Conte o que sua empresa precisa</h2>
         <p class="form__hint">
           Campos com <span aria-hidden="true">*</span><span class="sr-only">asterisco</span> são obrigatórios.
         </p>
@@ -94,12 +103,12 @@ const fallbackAction = `mailto:${site.email}?subject=${encodeURIComponent('Conta
         </div>
 
         <div class="field field--full field--select">
-          <select class="field__control" id="f-servico" name="servico">
-            <option value="">Ainda não sei / quero orientação</option>
-            {services.map((s) => <option value={s.title}>{s.title}</option>)}
+          <select class="field__control" id="f-servico" name="servico" data-service-select>
+            <option value={offer.label} selected>{offer.label}</option>
+            {services.map((s) => <option value={s.title} data-slug={s.slug}>{s.title}</option>)}
             <option value="Outro">Outro</option>
           </select>
-          <label class="field__label" for="f-servico">Serviço de interesse</label>
+          <label class="field__label" for="f-servico">Como podemos ajudar?</label>
           <svg class="field__chevron" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <path
               d="M6 9l6 6 6-6"
@@ -117,16 +126,12 @@ const fallbackAction = `mailto:${site.email}?subject=${encodeURIComponent('Conta
             class="field__control field__control--area"
             id="f-mensagem"
             name="mensagem"
-            rows="5"
+            rows="4"
             placeholder=" "
-            required
             minlength="10"
             maxlength="2000"
-            data-error-required="Escreva uma mensagem contando o que você precisa."
             data-error-short="Conte um pouco mais: pelo menos 10 caracteres."></textarea>
-          <label class="field__label" for="f-mensagem">
-            Mensagem <span class="field__req" aria-hidden="true">*</span>
-          </label>
+          <label class="field__label" for="f-mensagem">Mensagem (opcional)</label>
           <p class="field__error" id="f-mensagem-error"></p>
         </div>
       </div>
@@ -170,38 +175,14 @@ const fallbackAction = `mailto:${site.email}?subject=${encodeURIComponent('Conta
 </script>
 
 <style>
-  @property --panel-angle {
-    syntax: '<angle>';
-    initial-value: 0deg;
-    inherits: false;
-  }
-
-  /* Glass panel; the neon highlight orbits the border only while hovered and never while
-     someone is typing (focus-within), so it can't compete with the form. */
+  /* Glass panel with a static gradient hairline; the offer box inside owns the motion accent. */
   .panel {
     position: relative;
     isolation: isolate;
     border-radius: var(--r-xl);
     padding: 1px;
-    background:
-      conic-gradient(
-        from var(--panel-angle),
-        transparent 0deg,
-        color-mix(in srgb, var(--c-cyan) 85%, transparent) 40deg,
-        transparent 110deg,
-        transparent 200deg,
-        color-mix(in srgb, var(--c-magenta) 85%, transparent) 250deg,
-        transparent 320deg
-      ),
-      var(--grad-border);
-    animation: panel-orbit 9s linear infinite paused;
+    background: var(--grad-border);
     min-width: 0;
-  }
-
-  @media (hover: hover) {
-    .panel:hover:not(:focus-within) {
-      animation-play-state: running;
-    }
   }
 
   .panel::before {
@@ -216,12 +197,6 @@ const fallbackAction = `mailto:${site.email}?subject=${encodeURIComponent('Conta
     pointer-events: none;
   }
 
-  @keyframes panel-orbit {
-    to {
-      --panel-angle: 360deg;
-    }
-  }
-
   .panel__inner {
     position: relative;
     border-radius: calc(var(--r-xl) - 1px);
@@ -234,6 +209,26 @@ const fallbackAction = `mailto:${site.email}?subject=${encodeURIComponent('Conta
       background: color-mix(in srgb, var(--bg-elev-solid) 88%, transparent);
       backdrop-filter: blur(24px) saturate(140%);
     }
+  }
+
+  /* ---------- Offer highlight (RunBorder = Alfa "correBorda") ---------- */
+  .form :global(.offer) {
+    margin-bottom: var(--sp-6);
+  }
+
+  .offer__body {
+    display: grid;
+    gap: var(--sp-2);
+    padding: var(--sp-4) var(--sp-5);
+  }
+
+  .offer__body :global(.pulse-dot__label) {
+    color: var(--text);
+  }
+
+  .offer__text {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
   }
 
   /* ---------- Form ---------- */
@@ -554,9 +549,6 @@ const fallbackAction = `mailto:${site.email}?subject=${encodeURIComponent('Conta
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .panel {
-      animation: none;
-    }
     .success__ring,
     .success__tick {
       stroke-dashoffset: 0;

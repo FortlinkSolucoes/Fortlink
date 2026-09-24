@@ -144,7 +144,7 @@ import { services } from '@/data/site';
   };
 
   // In-page jumps for every [data-svc-link] (nav, hero cue…): Lenis when active,
-  // native otherwise; moves focus to the target and opens its disclosure.
+  // native otherwise; moves focus to the target and asks it to highlight itself.
   function jumpTo(id: string) {
     const target = document.getElementById(id);
     if (!target) return false;
