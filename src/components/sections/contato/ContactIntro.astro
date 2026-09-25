@@ -1,0 +1,213 @@
+---
+import GlowCard from '@/components/ui/GlowCard.astro';
+import Icon from '@/components/ui/Icon.astro';
+import '@fontsource/instrument-serif/latin-400-italic.css';
+import { offer, site, whatsappLink } from '@/data/site';
+
+const { street, zip, city, state } = site.address;
+const mapsQuery = encodeURIComponent(`${street}, ${city} - ${state}, ${zip}`);
+
+const channels = [
+  {
+    icon: 'whatsapp',
+    label: 'WhatsApp',
+    value: site.whatsappDisplay,
+    note: 'Resposta direta com nossa equipe',
+    href: whatsappLink(offer.whatsappText),
+    external: true,
+  },
+  {
+    icon: 'mail',
+    label: 'E-mail',
+    value: site.email,
+    note: 'Propostas, projetos e parcerias',
+    href: `mailto:${site.email}`,
+    external: false,
+  },
+  {
+    icon: 'pin',
+    label: 'Endereço',
+    value: street,
+    note: `${city} - ${state} · CEP ${zip}`,
+    href: `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`,
+    external: true,
+  },
+] as const;
+---
+
+<div class="intro" data-wa-hide>
+  <p class="eyebrow" data-reveal="fade">Contato</p>
+  <h1 id="contato-titulo" class="intro__title t-display" data-split>
+    <!-- Period inside the <em>: SplitText would otherwise split it off as its own word, leaving a gap. -->
+    O melhor jeito de começar é <em class="intro__em">uma conversa.</em>
+  </h1>
+  <p class="intro__lead muted" data-reveal>
+    Conte como está a TI da sua empresa hoje — da rede ao datacenter. A resposta vem direto da
+    FortLink, aqui em {site.address.city}, com um caminho claro e sem enrolação.
+  </p>
+
+  <ul class="channels" data-stagger role="list">
+    {
+      channels.map((c) => (
+        <GlowCard as="li" class="channel" flush>
+          <a
+            class="channel__link"
+            href={c.href}
+            data-cursor="Abrir"
+            {...(c.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          >
+            <span class="channel__icon" aria-hidden="true">
+              <Icon name={c.icon} size={22} />
+            </span>
+            <span class="channel__body">
+              <span class="channel__label">{c.label}</span>
+              <span class:list={['channel__value', c.icon === 'mail' && 'channel__value--email']}>{c.value}</span>
+              <span class="channel__note">{c.note}</span>
+            </span>
+            <span class="channel__arrow" aria-hidden="true">
+              <Icon name="arrow-up-right" size={18} />
+            </span>
+            {c.external && <span class="sr-only">(abre em nova aba)</span>}
+          </a>
+        </GlowCard>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .intro {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-5);
+    min-width: 0;
+  }
+
+  .intro__title {
+    margin-top: var(--sp-2);
+  }
+
+  /* Serif italic emphasis (Alfa technique) — the single accent of this block. */
+  .intro__em {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.08em;
+    letter-spacing: -0.01em;
+    padding-inline: 0.04em 0.1em;
+    background: var(--grad-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .intro__lead {
+    font-size: var(--fs-md);
+    max-width: 34rem;
+  }
+
+  .channels {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--sp-3);
+    margin-top: var(--sp-5);
+  }
+
+  .channel__link {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-4) var(--sp-5);
+    border-radius: inherit;
+  }
+
+  .channel__icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--r-md);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--c-cyan) 10%, transparent);
+    border: 1px solid var(--line);
+    transition:
+      color var(--dur) var(--ease-out),
+      border-color var(--dur) var(--ease-out),
+      background var(--dur) var(--ease-out);
+  }
+
+  .channel__body {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .channel__label {
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .channel__value {
+    font-family: var(--font-heading);
+    font-size: var(--fs-lg);
+    font-weight: 500;
+    color: var(--text);
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+
+  /* The e-mail is long: shrink it rather than break mid-domain. */
+  .channel__value--email {
+    font-size: clamp(0.9rem, 0.7rem + 1.1vw, 1.15rem);
+    overflow-wrap: normal;
+    white-space: nowrap;
+  }
+
+  .channel__note {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .channel__arrow {
+    color: var(--text-dim);
+    transition:
+      transform var(--dur) var(--ease-out),
+      color var(--dur) var(--ease-out);
+  }
+
+  .channel__link:hover .channel__icon,
+  .channel__link:focus-visible .channel__icon {
+    color: var(--c-white);
+    background: color-mix(in srgb, var(--c-cyan) 22%, transparent);
+    border-color: var(--c-cyan);
+  }
+
+  .channel__link:hover .channel__arrow,
+  .channel__link:focus-visible .channel__arrow {
+    color: var(--accent);
+    transform: translate(3px, -3px);
+  }
+
+  @media (max-width: 639.98px) {
+    .channel__link {
+      padding: var(--sp-4);
+      gap: var(--sp-3);
+    }
+    .channel__icon {
+      width: 40px;
+      height: 40px;
+    }
+    .channel__arrow {
+      display: none;
+    }
+    .channel__link {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+  }
+</style>

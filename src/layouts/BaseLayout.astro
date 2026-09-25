@@ -1,0 +1,59 @@
+---
+import '@/styles/global.css';
+import { site } from '@/data/site';
+import Header from '@/components/layout/Header.astro';
+import Footer from '@/components/layout/Footer.astro';
+import WhatsAppFloat from '@/components/layout/WhatsAppFloat.astro';
+import Cursor from '@/components/fx/Cursor.astro';
+import Preloader from '@/components/fx/Preloader.astro';
+import Seo from '@/components/layout/Seo.astro';
+import FxBoot from '@/components/fx/FxBoot.astro';
+import soraLatin from '@fontsource-variable/sora/files/sora-latin-wght-normal.woff2?url';
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Show the brand preloader (home only). */
+  preloader?: boolean;
+  /** Show the big closing CTA in the footer (turn off when the page already ends with one). */
+  footerCta?: boolean;
+}
+
+const { title, description = site.description, preloader = false, footerCta = true } = Astro.props;
+const fullTitle = title ? `${title} | ${site.name}` : `${site.name} | Infraestrutura e soluções em TI`;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#07041a" />
+    <!-- Set motion flags before first paint so [data-reveal] never flashes. -->
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+        document.documentElement.classList.add('reduced-motion');
+    </script>
+    <link rel="preload" href={soraLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
+    <Seo title={fullTitle} description={description} />
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    {preloader && <Preloader />}
+    <Cursor />
+    <Header />
+    <main id="conteudo" tabindex="-1">
+      <slot />
+    </main>
+    <Footer cta={footerCta} />
+    <FxBoot />
+    <WhatsAppFloat />
+    <script>
+      import { initMotion } from '@/scripts/motion';
+      initMotion();
+    </script>
+  </body>
+</html>

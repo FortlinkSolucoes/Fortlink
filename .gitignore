@@ -1,14 +1,8 @@
-# Node
 node_modules/
-
-# Visual Studio Code
+dist/
+.astro/
 .vscode/
-
-# OS files
 .DS_Store
 Thumbs.db
-
-# Log files
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+.env

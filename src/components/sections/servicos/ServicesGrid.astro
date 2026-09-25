@@ -1,0 +1,170 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import ServicesNav from './ServicesNav.astro';
+import ServiceCard from './ServiceCard.astro';
+import { services } from '@/data/site';
+
+// Bento rhythm on a 12-col grid: 7+5 / 4+4+4 / 5+7 / 8+4 / 6+6 — 11 services, no gaps.
+const rhythm = ['lg', 'md', 'sm', 'sm', 'sm', 'md', 'lg', 'xl', 'sm', 'half', 'half'] as const;
+const count = String(services.length).padStart(2, '0');
+---
+
+<section class="section section--tight grid-section" id="portfolio" data-svc-grid>
+  <div class="container">
+    <div class="grid-section__head">
+      <SectionHeading
+        eyebrow="Portfólio completo"
+        title={`${count} soluções. <span class="text-gradient">Uma só operação.</span>`}
+        align="left"
+      />
+      <p class="grid-section__hint muted">
+        Toque em <strong>“Ver detalhes”</strong> para ver o escopo e falar direto com a equipe.
+      </p>
+    </div>
+
+    <ServicesNav />
+
+    <ul class="bento" role="list">
+      {
+        services.map((service, i) => (
+          <ServiceCard service={service} index={i} total={services.length} size={rhythm[i % rhythm.length]} />
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .grid-section__head {
+    display: grid;
+    gap: var(--sp-5);
+    margin-bottom: var(--head-gap);
+  }
+
+  .grid-section__hint {
+    max-width: 34ch;
+    font-size: var(--fs-sm);
+  }
+
+  .grid-section__hint strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .bento {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 640px) {
+    .bento {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--sp-5);
+    }
+  }
+
+  /* Tablet only: the lead card goes full width. Capped so it can't outrank the 12-col spans below. */
+  @media (min-width: 640px) and (max-width: 959px) {
+    .bento > :global(.svc:first-child) {
+      grid-column: span 2;
+    }
+  }
+
+  @media (min-width: 960px) {
+    .grid-section__head {
+      grid-template-columns: 1fr auto;
+      align-items: end;
+    }
+
+    .bento {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .bento > :global(.svc) {
+      grid-column: span 4;
+    }
+
+    .bento > :global(.svc--md) {
+      grid-column: span 5;
+    }
+
+    .bento > :global(.svc--lg) {
+      grid-column: span 7;
+    }
+
+    .bento > :global(.svc--xl) {
+      grid-column: span 8;
+    }
+
+    .bento > :global(.svc--half) {
+      grid-column: span 6;
+    }
+
+    .bento > :global(.svc--lg),
+    .bento > :global(.svc--xl) {
+      min-height: 26rem;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, ScrollTrigger, onMotionReady, prefersReducedMotion, MOTION } from '@/scripts/motion';
+
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-svc]')];
+
+  // ---- Deep-link highlight: /servicos/#slug (and ServicesNav jumps) pulse the card border ----
+  const flashTimers = new WeakMap<HTMLElement, number>();
+  function flash(card: HTMLElement) {
+    window.clearTimeout(flashTimers.get(card));
+    card.removeAttribute('data-flash');
+    void card.offsetWidth; // restart the CSS animation
+    card.setAttribute('data-flash', '');
+    flashTimers.set(card, window.setTimeout(() => card.removeAttribute('data-flash'), 2000));
+  }
+
+  cards.forEach((card) => card.addEventListener('svc:open', () => flash(card)));
+
+  const flashFromHash = () => {
+    const id = decodeURIComponent(location.hash.slice(1));
+    const card = cards.find((c) => c.id === id);
+    if (card) flash(card);
+  };
+  // On first load, wait for the native jump to settle so the pulse is seen.
+  const initialFlash = () => window.setTimeout(flashFromHash, 400);
+  if (document.readyState === 'complete') initialFlash();
+  else window.addEventListener('load', initialFlash, { once: true });
+  window.addEventListener('hashchange', flashFromHash);
+
+  // ---- Motion ----
+  onMotionReady(() => {
+    if (prefersReducedMotion() || !cards.length) return;
+
+    // Entrance: cards rise in batches as they enter, with a slight 3D tip.
+    gsap.set(cards, {
+      opacity: 0,
+      y: MOTION.distance,
+      rotateX: -4,
+      transformPerspective: 1000,
+      transformOrigin: '50% 100%',
+    });
+    ScrollTrigger.batch(cards, {
+      start: 'top 90%',
+      once: true,
+      onEnter: (batch) =>
+        gsap.to(batch, {
+          opacity: 1,
+          y: 0,
+          rotateX: 0,
+          duration: MOTION.dur,
+          ease: MOTION.ease,
+          stagger: MOTION.stagger,
+          clearProps: 'transform',
+        }),
+    });
+    // Pointer tilt comes from GlowCard (tilt prop) — one system site-wide.
+  });
+</script>

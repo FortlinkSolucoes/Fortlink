@@ -1,0 +1,208 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import { services } from '@/data/site';
+---
+
+<nav class="snav" aria-label="Atalhos para os serviços" data-svc-nav>
+  <div class="snav__bar">
+    <div class="snav__scroller" data-svc-nav-list>
+      <span class="snav__indicator" aria-hidden="true" data-svc-nav-indicator></span>
+      <ul class="snav__list">
+      {
+        services.map((s) => (
+          <li>
+            <a class="snav__link" href={`/servicos/#${s.slug}`} data-svc-link={s.slug}>
+              <Icon name={s.icon} size={16} />
+              <span>{s.title}</span>
+            </a>
+          </li>
+        ))
+      }
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<style>
+  .snav {
+    position: sticky;
+    top: calc(var(--header-h) + var(--sp-3));
+    z-index: calc(var(--z-header) - 1);
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--head-gap);
+    pointer-events: none;
+  }
+
+  .snav__bar {
+    max-width: 100%;
+    padding: var(--sp-1);
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    background: color-mix(in srgb, var(--bg-elev-solid) 72%, transparent);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    pointer-events: auto;
+  }
+
+  .snav__scroller {
+    position: relative;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    border-radius: var(--r-pill);
+    mask-image: linear-gradient(to right, transparent, #000 var(--sp-5), #000 calc(100% - var(--sp-5)), transparent);
+  }
+
+  .snav__scroller::-webkit-scrollbar {
+    display: none;
+  }
+
+  .snav__list {
+    display: flex;
+    gap: var(--sp-1);
+    margin: 0;
+    padding: 0 var(--sp-3);
+    list-style: none;
+  }
+
+  .snav__indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    border-radius: var(--r-pill);
+    background: var(--grad-border);
+    box-shadow: var(--glow-sm);
+    opacity: 0;
+    transition:
+      transform var(--dur) var(--ease-out),
+      width var(--dur) var(--ease-out),
+      opacity var(--dur) var(--ease-out);
+    pointer-events: none;
+  }
+
+  .snav__indicator[data-on] {
+    opacity: 0.55;
+  }
+
+  .snav__list li {
+    position: relative;
+    flex: none;
+  }
+
+  .snav__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-4);
+    min-height: 40px;
+    border-radius: var(--r-pill);
+    font-size: var(--fs-sm);
+    white-space: nowrap;
+    color: var(--text-muted);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .snav__link:hover,
+  .snav__link[aria-current='true'] {
+    color: var(--text);
+  }
+
+  .snav__link :global(svg) {
+    color: var(--c-cyan);
+  }
+
+  .snav__link:focus-visible {
+    outline-offset: -2px;
+    border-radius: var(--r-pill);
+  }
+
+  @media (min-width: 1280px) {
+    .snav__scroller {
+      mask-image: none;
+    }
+
+    .snav__list {
+      padding: 0;
+    }
+  }
+</style>
+
+<script>
+  import { getLenis, prefersReducedMotion } from '@/scripts/motion';
+
+  const nav = document.querySelector<HTMLElement>('[data-svc-nav]');
+  const list = nav?.querySelector<HTMLElement>('[data-svc-nav-list]');
+  const indicator = nav?.querySelector<HTMLElement>('[data-svc-nav-indicator]');
+  const links = nav ? [...nav.querySelectorAll<HTMLAnchorElement>('a[data-svc-link]')] : [];
+
+  const offset = () => {
+    const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 76;
+    return header + (nav?.offsetHeight ?? 0) + 32;
+  };
+
+  // In-page jumps for every [data-svc-link] (nav, hero cue…): Lenis when active,
+  // native otherwise; moves focus to the target and asks it to highlight itself.
+  function jumpTo(id: string) {
+    const target = document.getElementById(id);
+    if (!target) return false;
+    const lenis = getLenis();
+    const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
+    if (lenis) lenis.scrollTo(target, { offset: -offset() });
+    else window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - offset(), behavior });
+    history.replaceState(null, '', `#${id}`);
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
+    target.dispatchEvent(new CustomEvent('svc:open'));
+    return true;
+  }
+
+  document.querySelectorAll<HTMLAnchorElement>('a[data-svc-link]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      if (jumpTo(a.dataset.svcLink ?? '')) e.preventDefault();
+    });
+  });
+
+  function setActive(slug: string | null) {
+    links.forEach((l) => {
+      if (l.dataset.svcLink === slug) l.setAttribute('aria-current', 'true');
+      else l.removeAttribute('aria-current');
+    });
+    if (!indicator || !list) return;
+    const link = links.find((l) => l.dataset.svcLink === slug);
+    if (!link) {
+      indicator.removeAttribute('data-on');
+      return;
+    }
+    const li = link.parentElement as HTMLElement;
+    indicator.style.width = `${li.offsetWidth}px`;
+    indicator.style.transform = `translateX(${li.offsetLeft}px)`;
+    indicator.setAttribute('data-on', '');
+    // Keep the active pill centered inside the horizontal scroller (never scrolls the page).
+    const left = li.offsetLeft - (list.clientWidth - li.offsetWidth) / 2;
+    list.scrollTo({ left, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  }
+
+  if (nav && links.length) {
+    const cards = links
+      .map((l) => document.getElementById(l.dataset.svcLink ?? ''))
+      .filter((el): el is HTMLElement => !!el);
+    const inView = new Map<string, boolean>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => inView.set(e.target.id, e.isIntersecting));
+        const first = cards.find((c) => inView.get(c.id));
+        if (first) setActive(first.id);
+      },
+      { rootMargin: '-40% 0px -45% 0px' },
+    );
+    cards.forEach((c) => io.observe(c));
+    window.addEventListener('resize', () => {
+      const active = links.find((l) => l.hasAttribute('aria-current'));
+      setActive(active?.dataset.svcLink ?? null);
+    });
+  }
+</script>

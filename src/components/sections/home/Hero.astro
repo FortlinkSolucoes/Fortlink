@@ -1,0 +1,419 @@
+---
+import { site, hero, offer, whatsappLink } from '@/data/site';
+import NetworkCanvas from '@/components/fx/NetworkCanvas.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import Logo from '@/components/ui/Logo.astro';
+
+// Alfa #1: the headline closes on a full stop in the solid accent colour.
+const headline =
+  'Tecnologia segura para empresas que <span class="text-gradient">não podem <span class="hero__end">parar<span class="hero__stop">.</span></span></span>';
+// Concrete local reference (confirmed address) instead of repeating the eyebrow's city.
+const location = `${site.address.street} · ${site.address.city}`;
+---
+
+<section class="hero" data-hero aria-labelledby="hero-title">
+  <div class="hero__bg" aria-hidden="true">
+    <NetworkCanvas class="hero__canvas" />
+    <!-- Brand continuity with the preloader: the circuit F, huge and in outline, traced on arrival. -->
+    <Logo variant="mark" class="hero__brand" data-hero-brand />
+    <div class="hero__grid"></div>
+    <div class="hero__glow"></div>
+  </div>
+
+  <div class="container hero__inner" data-hero-inner>
+    <p class="eyebrow" data-hero-in>Soluções em TI · {site.address.city}</p>
+
+    <h1 id="hero-title" class="hero__title t-display" data-split set:html={headline} />
+
+    <div class="hero__bottom">
+      <p class="hero__lead muted" data-hero-in>{hero.lead}</p>
+
+      <div class="hero__actions" data-hero-in>
+        <Button href={whatsappLink(offer.whatsappText)} variant="primary" icon="whatsapp" external pulse magnetic>
+          {offer.cta}
+        </Button>
+        <a class="hero__more" href="/servicos/">
+          <span class="hero__more-circle" aria-hidden="true">
+            <Icon name="arrow-up-right" size={18} />
+          </span>
+          <span class="hero__more-label">Ver serviços</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Alfa "meta" strip, 3 items: offer · proof · local reference. -->
+    <ul class="hero__meta" role="list">
+      <li class="hero__meta-offer" data-hero-in>
+        <strong>{offer.label}</strong>, sem compromisso
+      </li>
+      <li data-hero-in>{offer.modes.join(' ou ').replace('Remoto', 'remoto')}</li>
+      <li class="hero__meta-local" data-hero-in>
+        <Icon name="pin" size={16} />
+        <span>{location}</span>
+      </li>
+    </ul>
+  </div>
+
+  <a class="hero__scroll" href="#problemas" data-hero-in data-cursor="Rolar">
+    <span class="hero__scroll-line" aria-hidden="true"><span></span></span>
+    <span class="hero__scroll-label">Role para explorar</span>
+  </a>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-block: calc(var(--header-h) + var(--sp-8)) var(--sp-9);
+    overflow: clip;
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    z-index: var(--z-bg);
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent);
+    mask-image: linear-gradient(to bottom, #000 70%, transparent);
+  }
+
+  /* NetworkCanvas reacts to the pointer, so its own layer keeps events. */
+  .hero__bg :global(.hero__canvas) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+  }
+
+  .hero__bg :global(.hero__brand) {
+    display: none;
+    position: absolute;
+    top: 50%;
+    right: max(var(--gutter), calc((100% - var(--container)) / 2));
+    height: min(78svh, 720px);
+    translate: 12% -50%;
+    /* Watermark: barely there, fading out towards the headline and the bottom edge. */
+    opacity: 0.07;
+    -webkit-mask-image: radial-gradient(ellipse 65% 60% at 60% 40%, #000 30%, transparent 85%);
+    mask-image: radial-gradient(ellipse 65% 60% at 60% 40%, #000 30%, transparent 85%);
+  }
+
+  /* Outline only: no fill, no halo — a quiet watermark, not a second focal point. */
+  .hero__bg :global(.hero__brand .logo__mark) {
+    filter: none;
+  }
+
+  .hero__bg :global(.hero__brand .logo-fill) {
+    display: none;
+  }
+
+  .hero__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 88px 88px;
+    opacity: 0.35;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000, transparent);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000, transparent);
+  }
+
+  /* Accent radial rising from the bottom corner (Alfa overlay), kept faint. */
+  .hero__glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      60% 55% at 100% 100%,
+      color-mix(in srgb, var(--c-cyan) 14%, transparent),
+      transparent 70%
+    );
+  }
+
+  .hero__title {
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+  }
+
+  /* Keeps the accent full stop glued to "parar" through wrapping and SplitText. */
+  .hero__title :global(.hero__end) {
+    white-space: nowrap;
+  }
+
+  .hero__title :global(.hero__stop) {
+    color: var(--accent);
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: var(--z-base);
+    display: grid;
+    gap: var(--sp-6);
+    pointer-events: none;
+  }
+
+  .hero__inner > * {
+    pointer-events: auto;
+  }
+
+  .hero__bottom {
+    display: grid;
+    gap: var(--sp-6);
+    align-items: end;
+  }
+
+  .hero__lead {
+    font-size: var(--fs-md);
+    max-width: 44ch;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+  }
+
+  .hero__actions {
+    align-items: center;
+  }
+
+  /* Secondary action: circle + ↗, text link beside it. */
+  .hero__more {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: 3.25rem;
+    padding-right: var(--sp-2);
+    font-family: var(--font-heading);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text);
+    border-radius: var(--r-pill);
+  }
+
+  .hero__more-circle {
+    display: inline-grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    transition:
+      border-color var(--dur) var(--ease-out),
+      background-color var(--dur) var(--ease-out);
+  }
+
+  .hero__more-circle :global(svg) {
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  .hero__more:is(:hover, :focus-visible) .hero__more-circle {
+    border-color: var(--accent);
+    background-color: color-mix(in srgb, var(--c-cyan) 10%, transparent);
+  }
+
+  .hero__more:is(:hover, :focus-visible) .hero__more-circle :global(svg) {
+    transform: translate(2px, -2px);
+  }
+
+  .hero__meta {
+    list-style: none;
+    padding: var(--sp-5) 0 0;
+    margin-top: var(--sp-4);
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-3) var(--sp-5);
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .hero__meta-offer,
+  .hero__meta-local {
+    grid-column: 1 / -1;
+  }
+
+  .hero__meta-offer strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .hero__meta-local {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  .hero__meta-local :global(svg) {
+    flex: none;
+    color: var(--text-dim);
+  }
+
+  .hero__scroll {
+    position: absolute;
+    left: 50%;
+    bottom: var(--sp-5);
+    translate: -50% 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-3);
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .hero__scroll:hover {
+    color: var(--text);
+  }
+
+  .hero__scroll-line {
+    position: relative;
+    width: 1px;
+    height: 56px;
+    background: var(--line-strong);
+    overflow: hidden;
+  }
+
+  .hero__scroll-line span {
+    position: absolute;
+    inset: 0;
+    background: var(--grad-brand);
+    transform-origin: top;
+    animation: scroll-cue 2.2s var(--ease-in-out) 1s 3 both;
+  }
+
+  @keyframes scroll-cue {
+    0% {
+      transform: scaleY(0);
+      transform-origin: top;
+    }
+    45% {
+      transform: scaleY(1);
+      transform-origin: top;
+    }
+    55% {
+      transform: scaleY(1);
+      transform-origin: bottom;
+    }
+    100% {
+      transform: scaleY(0);
+      transform-origin: bottom;
+    }
+  }
+
+  /* Intro items wait for the preloader; failsafe reveals them if JS stalls. */
+  :global(html.js:not(.reduced-motion)) [data-hero-in] {
+    opacity: 0;
+    animation: hero-failsafe 0.6s ease 4.5s forwards;
+  }
+
+  @keyframes hero-failsafe {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .hero__bg :global(.hero__brand) {
+      display: block;
+    }
+
+    .hero__bottom {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .hero__meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sp-2) 0;
+    }
+
+    .hero__meta li + li::before {
+      content: '·';
+      margin-inline: var(--sp-4);
+      color: var(--text-dim);
+    }
+
+    .hero__scroll {
+      display: flex;
+    }
+  }
+
+  @media (min-height: 700px) and (min-width: 640px) {
+    .hero__inner {
+      gap: var(--sp-7);
+    }
+  }
+</style>
+
+<script>
+  import { gsap, onMotionReady, prefersReducedMotion, MOTION } from '@/scripts/motion';
+
+  onMotionReady(() => {
+    const hero = document.querySelector<HTMLElement>('[data-hero]');
+    if (!hero || prefersReducedMotion()) return;
+
+    const items = hero.querySelectorAll<HTMLElement>('[data-hero-in]');
+    const inner = hero.querySelector<HTMLElement>('[data-hero-inner]');
+    const traces = hero.querySelectorAll<SVGPathElement>('[data-hero-brand] .logo-trace');
+    const nodes = hero.querySelectorAll<SVGElement>('[data-hero-brand] .logo-node');
+    gsap.set(traces, { strokeDasharray: 100, strokeDashoffset: 100 });
+    gsap.set(nodes, { opacity: 0 });
+
+    let started = false;
+    const playIntro = () => {
+      if (started) return;
+      started = true;
+      gsap.fromTo(
+        items,
+        { opacity: 0, y: MOTION.distance * 0.7 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: MOTION.dur,
+          ease: MOTION.ease,
+          stagger: MOTION.stagger,
+          delay: 0.25,
+          // Hand control back to CSS so the failsafe animation can't fight GSAP.
+          onStart: () => items.forEach((el) => (el.style.animation = 'none')),
+        },
+      );
+      // The preloader's F hands over to the hero watermark: same traces, drawn once more.
+      gsap.to(traces, { strokeDashoffset: 0, duration: 2.2, ease: MOTION.easeInOut, stagger: 0.04 });
+      gsap.to(nodes, { opacity: 1, duration: MOTION.durShort, stagger: 0.03, delay: 1.2 });
+    };
+
+    // Wait for the preloader when it is actually on screen; otherwise go now.
+    // Same handshake as fx/FxBoot: [data-preloader] present and <html> not yet .preloader-done.
+    const preloaderPending =
+      !!document.querySelector('[data-preloader]') &&
+      !document.documentElement.classList.contains('preloader-done');
+    if (preloaderPending) {
+      window.addEventListener('preloader:done', playIntro, { once: true });
+      window.setTimeout(playIntro, 2600);
+    } else {
+      playIntro();
+    }
+
+    // Content drifts up and dims as the hero leaves — depth without stealing focus.
+    if (inner) {
+      gsap.to(inner, {
+        yPercent: -14,
+        opacity: 0.25,
+        ease: 'none',
+        scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true },
+      });
+    }
+  });
+</script>

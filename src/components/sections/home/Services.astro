@@ -1,0 +1,358 @@
+---
+import { services } from '@/data/site';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import GlowCard from '@/components/ui/GlowCard.astro';
+import ServiceIcon from '@/components/ui/ServiceIcon.astro';
+import Button from '@/components/ui/Button.astro';
+
+const total = String(services.length).padStart(2, '0');
+---
+
+<section class="services" id="servicos" data-services>
+  <div class="services__pin" data-services-pin>
+    <div class="container services__head">
+      <SectionHeading
+        eyebrow="O que fazemos"
+        title='Da estratégia ao cabo, <span class="text-gradient">um só parceiro de TI</span>.'
+      />
+      <div class="services__meta">
+        <p class="services__count" aria-hidden="true">
+          <span data-services-current>01</span><span class="services__count-sep">/</span>{total}
+        </p>
+        <Button href="/servicos/" variant="link" icon="arrow-right">Ver todos os serviços</Button>
+      </div>
+    </div>
+
+    <div class="services__viewport" data-services-viewport>
+      <ul
+        class="services__track"
+        role="list"
+        tabindex="0"
+        aria-label="Serviços (deslize para ver todos)"
+        data-services-track
+      >
+        {
+          services.map((s) => (
+            <GlowCard as="li" class="service-card">
+              <span class="service-card__shade" aria-hidden="true" data-services-shade></span>
+              <div class="service-card__top">
+                <ServiceIcon name={s.icon} />
+              </div>
+              <h3 class="service-card__title">{s.title}</h3>
+              <p class="service-card__summary muted">{s.summary}</p>
+              <ul class="service-card__details" role="list">
+                {s.details.map((d) => (
+                  <li>{d}</li>
+                ))}
+              </ul>
+              <Button
+                href={`/servicos/?abrir=${s.slug}`}
+                variant="link"
+                icon="arrow-right"
+                class="service-card__more"
+                aria-label={`Ver detalhes de ${s.title}`}
+              >
+                Ver detalhes
+              </Button>
+            </GlowCard>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="container services__progress" aria-hidden="true">
+      <span data-services-bar></span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .services {
+    position: relative;
+    padding-block: var(--section-y);
+  }
+
+  .services__head {
+    display: grid;
+    gap: var(--sp-6);
+    align-items: end;
+  }
+
+  .services__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-5);
+  }
+
+  .services__count {
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+    letter-spacing: 0.18em;
+    color: var(--text-dim);
+    display: none;
+  }
+
+  .services__count span:first-child {
+    color: var(--text);
+  }
+
+  .services__count-sep {
+    margin-inline: var(--sp-2);
+  }
+
+  .services__viewport {
+    margin-top: var(--head-gap);
+  }
+
+  /* Default (≥1024px without motion): plain responsive grid aligned to the container. */
+  .services__track {
+    --edge: calc((100% - min(100% - 2 * var(--gutter), var(--container))) / 2);
+    list-style: none;
+    margin: 0;
+    padding-block: 0;
+    padding-inline: var(--edge);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: var(--sp-4);
+  }
+
+  .services__track:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .services__track :global(.service-card) {
+    min-height: 100%;
+  }
+
+  /* Below 1024px: swipeable snap carousel (echoes the desktop horizontal scroll).
+     Full details live on /servicos/, so cards stay compact here. */
+  @media (max-width: 1023.98px) {
+    .services__track {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--edge);
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+      padding-bottom: var(--sp-2);
+    }
+
+    .services__track::-webkit-scrollbar {
+      display: none;
+    }
+
+    .services__track :global(.service-card) {
+      flex: 0 0 min(85vw, 340px);
+      scroll-snap-align: start;
+    }
+
+    .service-card__details {
+      display: none;
+    }
+  }
+
+  /* Pin mode: dims cards entering from the right without touching the glass's opacity. */
+  .service-card__shade {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    background: var(--bg);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .service-card__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-4);
+  }
+
+  /* Deep link into the /servicos/ modal (?abrir=slug). Sits at the card foot. */
+  .services :global(.service-card__more) {
+    align-self: flex-start;
+    margin-top: var(--sp-5);
+  }
+
+  .service-card__details + :global(.service-card__more) {
+    margin-top: var(--sp-4);
+  }
+
+  @media (max-width: 1023.98px) {
+    .services :global(.service-card__more) {
+      margin-top: auto;
+      padding-top: var(--sp-4);
+    }
+  }
+
+  .service-card__title {
+    font-size: var(--fs-lg);
+  }
+
+  .service-card__summary {
+    font-size: var(--fs-sm);
+  }
+
+  .service-card__details {
+    list-style: none;
+    padding: var(--sp-4) 0 0;
+    margin-top: auto;
+    border-top: 1px solid var(--line);
+    display: grid;
+    gap: var(--sp-2);
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .service-card__details li {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+
+  .service-card__details li::before {
+    content: '';
+    flex: none;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .services__progress {
+    display: none;
+    height: 1px;
+    margin-top: var(--sp-7);
+    background: var(--line);
+  }
+
+  .services__progress span {
+    display: block;
+    height: 100%;
+    background: var(--grad-brand);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  @media (min-width: 640px) {
+    .services__head {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .services__meta {
+      flex-direction: column;
+      align-items: flex-end;
+    }
+  }
+
+  /* Horizontal mode — enabled by the script only on large screens with motion allowed. */
+  .services.is-horizontal {
+    padding-block: 0;
+  }
+
+  .is-horizontal .services__pin {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: calc(var(--header-h) + var(--sp-5)) var(--sp-7);
+    overflow: hidden;
+  }
+
+  .is-horizontal .services__viewport {
+    margin-top: var(--sp-7);
+  }
+
+  /* % padding resolves against the viewport box (clientWidth), so it ignores the scrollbar
+     and the first card lines up with .container. */
+  .is-horizontal .services__track {
+    display: flex;
+    width: max-content;
+    gap: var(--sp-5);
+    padding-inline: max(var(--gutter), calc((100% - var(--container)) / 2));
+  }
+
+  .is-horizontal .services__track :global(.service-card) {
+    width: clamp(320px, 27vw, 400px);
+    min-height: min(56vh, 460px);
+  }
+
+  .is-horizontal .services__count,
+  .is-horizontal .services__progress {
+    display: block;
+  }
+</style>
+
+<script>
+  import { gsap, ScrollTrigger, onMotionReady, prefersReducedMotion } from '@/scripts/motion';
+
+  onMotionReady(() => {
+    const section = document.querySelector<HTMLElement>('[data-services]');
+    if (!section || prefersReducedMotion()) return;
+
+    const pin = section.querySelector<HTMLElement>('[data-services-pin]')!;
+    const viewport = section.querySelector<HTMLElement>('[data-services-viewport]')!;
+    const track = section.querySelector<HTMLElement>('[data-services-track]')!;
+    const bar = section.querySelector<HTMLElement>('[data-services-bar]');
+    const current = section.querySelector<HTMLElement>('[data-services-current]');
+    const cards = Array.from(track.children) as HTMLElement[];
+
+    const mm = gsap.matchMedia();
+
+    // Desktop: pin the section and translate the track horizontally with vertical scroll.
+    mm.add('(min-width: 1024px) and (min-height: 640px)', () => {
+      section.classList.add('is-horizontal');
+      // The track is moved by the pin now, not scrolled: drop it from the tab order.
+      track.removeAttribute('tabindex');
+      const distance = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
+
+      const scroller = gsap.to(track, {
+        x: () => -distance(),
+        ease: 'none',
+        scrollTrigger: {
+          trigger: pin,
+          start: 'top top',
+          end: () => `+=${distance()}`,
+          pin: true,
+          scrub: 0.8,
+          invalidateOnRefresh: true,
+          anticipatePin: 1,
+          // Refresh before later triggers so they account for the pin spacing.
+          refreshPriority: 1,
+          onUpdate: (self) => {
+            if (bar) bar.style.transform = `scaleX(${self.progress})`;
+            if (current) {
+              const idx = Math.min(cards.length, Math.round(self.progress * (cards.length - 1)) + 1);
+              current.textContent = String(idx).padStart(2, '0');
+            }
+          },
+        },
+      });
+
+      // Cards ease in from slightly smaller/dimmer as they enter the horizontal viewport.
+      // Dimming is an overlay (not opacity on the card) so the glass keeps blurring.
+      cards.forEach((card) => {
+        const shade = card.querySelector<HTMLElement>('[data-services-shade]');
+        const st = {
+          trigger: card,
+          containerAnimation: scroller,
+          start: 'left 98%',
+          end: 'left 65%',
+          scrub: true,
+        };
+        gsap.fromTo(card, { scale: 0.92 }, { scale: 1, ease: 'none', scrollTrigger: st });
+        if (shade) gsap.fromTo(shade, { opacity: 0.6 }, { opacity: 0, ease: 'none', scrollTrigger: { ...st } });
+      });
+
+      ScrollTrigger.sort();
+
+      return () => {
+        section.classList.remove('is-horizontal');
+        track.setAttribute('tabindex', '0');
+        if (bar) bar.style.transform = '';
+      };
+    });
+  });
+</script>

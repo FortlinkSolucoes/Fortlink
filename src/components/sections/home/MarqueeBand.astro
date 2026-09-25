@@ -1,0 +1,55 @@
+---
+import { services } from '@/data/site';
+import Marquee from '@/components/fx/Marquee.astro';
+
+const items = services.map((s) => s.title);
+---
+
+<section class="band" aria-label="Nossas soluções">
+  <div class="band__strip">
+    <Marquee items={items} bare />
+  </div>
+</section>
+
+<style>
+  .band {
+    position: relative;
+    padding-block: var(--sp-7);
+    overflow: clip;
+  }
+
+  .band__strip {
+    position: relative;
+    --marquee-fs: var(--fs-xl);
+    padding-block: var(--sp-5);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--c-ink) 70%, transparent) 20%,
+      color-mix(in srgb, var(--c-ink) 70%, transparent) 80%,
+      transparent
+    );
+    /* Slight tilt keeps the band feeling kinetic even when idle. */
+    rotate: -1.5deg;
+    width: 104%;
+    margin-inline: -2%;
+  }
+
+  .band__strip::before,
+  .band__strip::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    height: 1px;
+    background: var(--grad-brand);
+    opacity: 0.5;
+  }
+
+  .band__strip::before {
+    top: -1px;
+  }
+
+  .band__strip::after {
+    bottom: -1px;
+  }
+</style>

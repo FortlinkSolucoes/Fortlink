@@ -1,0 +1,89 @@
+---
+import { site, offer } from '@/data/site';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Path or absolute URL of the share image (1200×630). */
+  image?: string;
+  /** Force noindex (the 404 page gets it automatically). */
+  noindex?: boolean;
+}
+
+const { title, description, image = '/og.png', noindex = false } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const ogImage = new URL(image, site.url).href;
+const is404 = /^\/404(\.html|\/)?$/.test(Astro.url.pathname);
+const robots = noindex || is404 ? 'noindex, follow' : 'index, follow, max-image-preview:large';
+
+// '554574008279' → '+55 45 7400-8279'
+const w = site.whatsapp;
+const telephone = `+${w.slice(0, 2)} ${w.slice(2, 4)} ${w.slice(4, -4)}-${w.slice(-4)}`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  '@id': `${site.url}/#empresa`,
+  name: site.name,
+  alternateName: site.shortName,
+  description: site.description,
+  slogan: site.tagline,
+  url: `${site.url}/`,
+  logo: `${site.url}/logo-fortlink.webp`,
+  image: ogImage,
+  email: site.email,
+  telephone,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: site.address.street,
+    postalCode: site.address.zip,
+    addressLocality: site.address.city,
+    addressRegion: site.address.state,
+    addressCountry: 'BR',
+  },
+  areaServed: [
+    { '@type': 'City', name: site.address.city },
+    { '@type': 'AdministrativeArea', name: offer.area },
+  ],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    telephone,
+    email: site.email,
+    contactType: 'customer service',
+    areaServed: 'BR',
+    availableLanguage: ['Portuguese'],
+  },
+};
+
+// Prevent "</script>" injection from any content string.
+const jsonLdHtml = JSON.stringify(jsonLd).replace(/</g, '\\u003c');
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta name="robots" content={robots} />
+<link rel="canonical" href={canonical} />
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/favicon.png" type="image/png" sizes="any" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="pt_BR" />
+<meta property="og:site_name" content={site.name} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={`${site.name} — ${site.tagline}`} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+<script type="application/ld+json" set:html={jsonLdHtml} />

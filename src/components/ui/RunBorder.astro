@@ -1,0 +1,61 @@
+---
+/**
+ * Container with a 1.5px gradient border that runs around (Alfa `correBorda`).
+ * Interior is --bg-elev-solid, radius --r-lg. Static gradient in reduced motion.
+ * Padding of the interior is up to the consumer (pass it through `class`
+ * targeting `.run-border__inner`, or wrap content in your own padded element).
+ */
+interface Props {
+  as?: 'div' | 'section' | 'article' | 'aside';
+  class?: string;
+  [attr: string]: unknown;
+}
+
+const { as: Tag = 'div', class: className, ...rest } = Astro.props;
+---
+
+<Tag class:list={['run-border', className]} {...rest}>
+  <div class="run-border__inner">
+    <slot />
+  </div>
+</Tag>
+
+<style>
+  .run-border {
+    --rb-w: 1.5px;
+    position: relative;
+    display: block;
+    padding: var(--rb-w);
+    border-radius: var(--r-lg);
+    /* Mostly quiet line with one cyan → magenta highlight that travels. */
+    background: linear-gradient(
+      110deg,
+      var(--line-strong) 0%,
+      var(--line-strong) 30%,
+      var(--c-cyan) 42%,
+      var(--c-magenta) 52%,
+      var(--line-strong) 64%,
+      var(--line-strong) 100%
+    );
+    background-size: 300% 300%;
+    background-position: 50% 50%;
+  }
+
+  .run-border__inner {
+    height: 100%;
+    border-radius: calc(var(--r-lg) - var(--rb-w));
+    background: var(--bg-elev-solid);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html:not(.reduced-motion)) .run-border {
+      animation: fl-run 7s var(--ease-in-out) infinite;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .run-border {
+      background: CanvasText;
+    }
+  }
+</style>

@@ -1,0 +1,34 @@
+---
+/**
+ * Big statement text with the brand gradient and a light band sweeping across
+ * (Alfa `brilho`). Solid --text color in reduced motion / forced colors.
+ * Keyframes + gradient logic live in styles/effects.css (.u-shimmer).
+ * Size defaults to --fs-2xl; override through `class`.
+ */
+interface Props {
+  as?: 'p' | 'h2' | 'span';
+  class?: string;
+  [attr: string]: unknown;
+}
+
+const { as: Tag = 'p', class: className, ...rest } = Astro.props;
+---
+
+<Tag class:list={['shimmer-text', 'u-shimmer', className]} {...rest}>
+  <slot />
+</Tag>
+
+<style>
+  .shimmer-text {
+    font-family: var(--font-heading);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+
+  span.shimmer-text {
+    display: inline;
+  }
+</style>

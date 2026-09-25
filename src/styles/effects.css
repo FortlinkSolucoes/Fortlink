@@ -1,0 +1,120 @@
+/* ==========================================================
+   Micro-animations (Alfa conversion techniques, FortLink voice).
+   Keyframes are global so any component can reference them.
+   Every infinite animation is opt-in and only runs when BOTH:
+     - the OS allows motion  (prefers-reduced-motion: no-preference)
+     - the page did not flag  html.reduced-motion
+   Map to Alfa: pulsoBotao → fl-pulse-ring · setaVai → fl-nudge ·
+   brilho → fl-shimmer · correBorda → fl-run · pulsa → fl-dot
+   ========================================================== */
+
+/* Soft cyan ring that expands and fades (CTA pulse). */
+@keyframes fl-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-cyan) 42%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 12px color-mix(in srgb, var(--c-cyan) 0%, transparent);
+  }
+}
+
+/* Arrow "push": 0 → 5px → 0. Direction via --nudge-x / --nudge-y. */
+@keyframes fl-nudge {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(var(--nudge-x, 5px), var(--nudge-y, 0px));
+  }
+}
+
+/* Light band sweeping across gradient text (2 layers: band, base gradient). */
+@keyframes fl-shimmer {
+  from {
+    background-position:
+      160% 0,
+      0 0;
+  }
+  to {
+    background-position:
+      -60% 0,
+      0 0;
+  }
+}
+
+/* Running gradient border (background-size 300%). */
+@keyframes fl-run {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Live dot breathing. */
+@keyframes fl-dot {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.55;
+  }
+}
+
+/* ---------- Utilities ---------- */
+
+/* Shimmer text. Default (no motion / reduced motion / forced colors): solid color. */
+.u-shimmer {
+  color: var(--text);
+}
+
+.u-nudge {
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.reduced-motion) .u-shimmer {
+    background-image:
+      linear-gradient(
+        105deg,
+        transparent 38%,
+        color-mix(in srgb, var(--c-white) 85%, transparent) 50%,
+        transparent 62%
+      ),
+      var(--grad-text);
+    background-size:
+      250% 100%,
+      100% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    color: transparent;
+    animation: fl-shimmer 4.2s var(--ease-in-out) infinite;
+  }
+
+  html:not(.reduced-motion) .u-nudge {
+    animation: fl-nudge 1.6s var(--ease-in-out) infinite;
+  }
+
+  html:not(.reduced-motion) .u-pulse-ring {
+    animation: fl-pulse-ring 2.6s var(--ease-out) infinite;
+  }
+}
+
+@media (forced-colors: active) {
+  .u-shimmer {
+    background: none !important;
+    color: CanvasText !important;
+  }
+}

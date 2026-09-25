@@ -1,0 +1,98 @@
+/* ==========================================================
+   FortLink design tokens — single source of truth.
+   Never hardcode colors/spacing in components: use these.
+   ========================================================== */
+:root {
+  /* Brand (from logo: circuit F cyan → blue → violet → magenta) */
+  --c-night: #07041a;
+  --c-night-2: #0e0725;
+  --c-ink: #140b33;
+  --c-violet: #3a1e65;
+  --c-blue: #465eba;
+  --c-cyan: #3bcae6;
+  --c-magenta: #c04fd6;
+  --c-pink: #f07ad8;
+  --c-mist: #cfccec;
+  --c-white: #ffffff;
+
+  /* Semantic */
+  --bg: var(--c-night);
+  --bg-elev: rgba(20, 11, 51, 0.55);
+  --bg-elev-solid: #120a2e;
+  --text: #f4f2ff;
+  --text-muted: #a9a4cf;
+  --text-dim: #8680b0; /* ≥ 5:1 on --bg, AA for small text */
+  --line: rgba(207, 204, 236, 0.12);
+  --line-strong: rgba(207, 204, 236, 0.24);
+  --accent: var(--c-cyan);
+  --accent-2: var(--c-magenta);
+  --focus: var(--c-cyan);
+
+  /* Gradients */
+  --grad-brand: linear-gradient(120deg, var(--c-cyan) 0%, var(--c-blue) 45%, var(--c-magenta) 80%, var(--c-pink) 100%);
+  --grad-text: linear-gradient(100deg, #7ee8ff 0%, #8fa2ff 45%, #e28bf0 100%);
+  --grad-border: linear-gradient(140deg, rgba(59, 202, 230, 0.6), rgba(70, 94, 186, 0.15) 40%, rgba(192, 79, 214, 0.6));
+  --glow-cyan: 0 0 24px rgba(59, 202, 230, 0.35), 0 0 64px rgba(59, 202, 230, 0.15);
+  --glow-magenta: 0 0 24px rgba(192, 79, 214, 0.35), 0 0 64px rgba(192, 79, 214, 0.15);
+  /* Small, quiet halo for dots/nodes/indicators. Reserve --glow-cyan for the primary CTA hover
+     and at most one hero element per viewport. */
+  --glow-sm: 0 0 8px color-mix(in srgb, var(--c-cyan) 35%, transparent);
+
+  /* Typography */
+  --font-display: 'Michroma', 'Sora Variable', system-ui, sans-serif; /* wide techno — logo, eyebrows, small caps labels */
+  --font-heading: 'Sora Variable', system-ui, sans-serif;
+  --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --fs-xl: clamp(1.6rem, 1.3rem + 1.4vw, 2.4rem);
+  --fs-2xl: clamp(2.2rem, 1.6rem + 3vw, 4rem);
+  --fs-hero: clamp(2.6rem, 1.4rem + 5.6vw, 6.2rem);
+
+  /* Spacing (4px scale) */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4rem;
+  --sp-9: 6rem;
+  --sp-10: 8rem;
+  --section-y: clamp(5rem, 3rem + 8vw, 10rem);
+  --gutter: clamp(1rem, 0.5rem + 3vw, 3rem);
+  --container: 1240px;
+  --head-gap: var(--sp-8); /* section heading → content */
+
+  /* Radius */
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --r-xl: 32px;
+  --r-pill: 999px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 180ms;
+  --dur: 420ms;
+  --dur-slow: 900ms;
+
+  /* Layers */
+  --z-bg: -1;
+  --z-base: 1;
+  --z-header: 50;
+  --z-float: 60;
+  --z-cursor: 90;
+  --z-loader: 100;
+
+  --header-h: 76px;
+
+  /* Breakpoints (custom properties can't be used in @media — keep these literal values):
+     640px (sm) · 960px (md) · 1280px (lg). 1024px only for the pinned horizontal services. */
+  color-scheme: dark;
+}

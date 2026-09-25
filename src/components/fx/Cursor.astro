@@ -1,0 +1,241 @@
+---
+// Custom cursor: precise dot + lagging ring. Grows over interactive elements and can show a
+// label via data-cursor="Ver". Only for fine pointers with motion allowed; otherwise it stays
+// display:none and the native cursor is untouched. Also boots the global [data-magnetic] effect.
+---
+
+<div class="cursor" data-cursor-root aria-hidden="true">
+  <div class="cursor__ring" data-cursor-ring>
+    <div class="cursor__ring-shape"></div>
+    <span class="cursor__label" data-cursor-label></span>
+  </div>
+  <div class="cursor__dot" data-cursor-dot></div>
+</div>
+
+<script>
+  import { gsap, onMotionReady, prefersReducedMotion, isTouch } from '@/scripts/motion';
+  import { initMagnetic } from '@/scripts/magnetic';
+
+  const INTERACTIVE = 'a[href], button, [data-cursor], label[for], summary, [role="button"], select';
+  const TEXT_FIELD = 'input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]), textarea, [contenteditable="true"]';
+
+  onMotionReady(() => {
+    initMagnetic();
+
+    const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const root = document.querySelector<HTMLElement>('[data-cursor-root]');
+    if (!root || !fine || isTouch() || prefersReducedMotion()) return;
+
+    const ring = root.querySelector<HTMLElement>('[data-cursor-ring]')!;
+    const dot = root.querySelector<HTMLElement>('[data-cursor-dot]')!;
+    const label = root.querySelector<HTMLElement>('[data-cursor-label]')!;
+    const html = document.documentElement;
+
+    html.classList.add('has-cursor');
+    gsap.set([ring, dot], { xPercent: -50, yPercent: -50 });
+
+    const ringX = gsap.quickTo(ring, 'x', { duration: 0.55, ease: 'power3.out' });
+    const ringY = gsap.quickTo(ring, 'y', { duration: 0.55, ease: 'power3.out' });
+    const dotX = gsap.quickTo(dot, 'x', { duration: 0.12, ease: 'power2.out' });
+    const dotY = gsap.quickTo(dot, 'y', { duration: 0.12, ease: 'power2.out' });
+
+    let visible = false;
+    let current: Element | null = null;
+
+    const show = (x: number, y: number) => {
+      if (!visible) {
+        visible = true;
+        gsap.set([ring, dot], { x, y });
+      }
+      root.classList.add('is-visible');
+    };
+
+    window.addEventListener(
+      'pointermove',
+      (e) => {
+        if (e.pointerType !== 'mouse') return;
+        show(e.clientX, e.clientY);
+        ringX(e.clientX);
+        ringY(e.clientY);
+        dotX(e.clientX);
+        dotY(e.clientY);
+      },
+      { passive: true },
+    );
+
+    const setTarget = (target: Element | null) => {
+      if (target === current) return;
+      current = target;
+      const text = target?.getAttribute('data-cursor')?.trim() ?? '';
+      root.classList.toggle('is-hover', !!target && !text);
+      root.classList.toggle('has-label', !!text);
+      if (text) label.textContent = text;
+    };
+
+    document.addEventListener('pointerover', (e) => {
+      const t = e.target as Element | null;
+      if (!t?.closest) return;
+      // Iframes (map) stop sending pointermove to us: hide ours and let theirs show.
+      root.classList.toggle('is-text', !!t.closest(`${TEXT_FIELD}, iframe`));
+      setTarget(t.closest(INTERACTIVE));
+    });
+
+    document.documentElement.addEventListener('pointerleave', () => {
+      visible = false;
+      root.classList.remove('is-visible');
+    });
+
+    // A modal <dialog> renders in the browser's top layer, above any z-index, so our cursor
+    // would sit behind it with the native one hidden. Hand back the native cursor while one is open.
+    const syncDialog = () => html.classList.toggle('cursor-off', !!document.querySelector('dialog[open]'));
+    new MutationObserver(syncDialog).observe(document.body, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['open'],
+    });
+    syncDialog();
+
+    window.addEventListener('pointerdown', () => root.classList.add('is-down'));
+    window.addEventListener('pointerup', () => root.classList.remove('is-down'));
+    window.addEventListener('blur', () => {
+      visible = false;
+      root.classList.remove('is-down', 'is-visible');
+    });
+  });
+</script>
+
+<style>
+  .cursor {
+    display: none;
+    position: fixed;
+    inset: 0 auto auto 0;
+    z-index: var(--z-cursor);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    :global(html.js:not(.reduced-motion)) .cursor {
+      display: block;
+    }
+
+    :global(html.has-cursor),
+    :global(html.has-cursor *) {
+      cursor: none !important;
+    }
+
+    :global(html.has-cursor) :global(:is(input, textarea, [contenteditable='true'])) {
+      cursor: text !important;
+    }
+
+    :global(html.has-cursor.cursor-off),
+    :global(html.has-cursor.cursor-off *) {
+      cursor: auto !important;
+    }
+
+    :global(html.has-cursor.cursor-off) :global(:is(a[href], button, [role='button'], select, label[for])) {
+      cursor: pointer !important;
+    }
+
+    :global(html.js.has-cursor.cursor-off) .cursor {
+      display: none;
+    }
+  }
+
+  .cursor.is-visible {
+    opacity: 1;
+  }
+
+  .cursor.is-text {
+    opacity: 0;
+  }
+
+  .cursor__ring,
+  .cursor__dot {
+    position: fixed;
+    top: 0;
+    left: 0;
+    will-change: transform;
+  }
+
+  .cursor__ring {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+  }
+
+  .cursor__ring-shape {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    transition:
+      transform var(--dur) var(--ease-out),
+      background-color var(--dur) var(--ease-out),
+      border-color var(--dur) var(--ease-out),
+      box-shadow var(--dur) var(--ease-out),
+      opacity var(--dur) var(--ease-out);
+  }
+
+  .cursor__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-cyan);
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      scale var(--dur) var(--ease-out);
+  }
+
+  .cursor__label {
+    position: relative;
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text);
+    white-space: nowrap;
+    opacity: 0;
+    scale: 0.6;
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      scale var(--dur) var(--ease-out);
+  }
+
+  /* Hover: ring expands and picks up the accent edge (no halo — the target already glows). */
+  .cursor.is-hover .cursor__ring-shape {
+    transform: scale(1.7);
+    border-color: var(--c-cyan);
+    background-color: color-mix(in srgb, var(--c-cyan) 6%, transparent);
+  }
+
+  .cursor.is-hover .cursor__dot {
+    scale: 0.5;
+  }
+
+  /* Label: solid ink bubble with an accent edge, text in full contrast. */
+  .cursor.has-label .cursor__ring-shape {
+    transform: scale(2.4);
+    border-color: var(--c-cyan);
+    background: var(--c-ink);
+  }
+
+  .cursor.has-label .cursor__label {
+    opacity: 1;
+    scale: 1;
+  }
+
+  .cursor.has-label .cursor__dot {
+    opacity: 0;
+  }
+
+  .cursor.is-down .cursor__ring-shape {
+    transform: scale(0.8);
+  }
+
+  .cursor.is-down.is-hover .cursor__ring-shape {
+    transform: scale(1.45);
+  }
+</style>

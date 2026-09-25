@@ -1,0 +1,206 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import { site } from '@/data/site';
+
+const { street, zip, city, state } = site.address;
+const embedSrc = 'https://www.google.com/maps?q=Rua+Anapu,+67,+Foz+do+Iguaçu+-+PR&output=embed';
+const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${street}, ${city} - ${state}, ${zip}`)}`;
+---
+
+<section class="section map" aria-labelledby="mapa-titulo">
+  <div class="container">
+    <div class="map__head">
+      <p class="eyebrow" data-reveal="fade">Localização</p>
+      <h2 id="mapa-titulo" class="map__title" data-split>
+        Onde a <span class="text-gradient">conexão</span> começa.
+      </h2>
+    </div>
+
+    <figure class="map__frame" data-reveal="scale">
+      <iframe
+        class="map__iframe"
+        src={embedSrc}
+        title={`Mapa: ${site.name}, ${street}, ${city} - ${state}`}
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        allowfullscreen></iframe>
+
+      <figcaption class="map__card">
+        <span class="map__pin" aria-hidden="true">
+          <span class="map__pulse"></span>
+          <Icon name="pin" size={20} />
+        </span>
+        <span class="map__address">
+          <strong>{street}</strong>
+          <span>{city} - {state} · CEP {zip}</span>
+        </span>
+        <a class="map__link" href={mapsLink} target="_blank" rel="noopener noreferrer">
+          Traçar rota
+          <Icon name="arrow-up-right" size={16} />
+          <span class="sr-only">(abre o Google Maps em nova aba)</span>
+        </a>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .map {
+    padding-top: 0;
+  }
+
+  .map__head {
+    display: grid;
+    gap: var(--sp-4);
+    margin-bottom: var(--head-gap);
+  }
+
+  .map__title {
+    font-size: var(--fs-2xl);
+    max-width: 18ch;
+  }
+
+  .map__frame {
+    position: relative;
+    border-radius: var(--r-xl);
+    padding: 1px;
+    background: var(--grad-border);
+    box-shadow: 0 40px 120px -40px color-mix(in srgb, var(--c-blue) 45%, transparent);
+  }
+
+  .map__iframe {
+    display: block;
+    width: 100%;
+    height: clamp(360px, 55vw, 560px);
+    border: 0;
+    border-radius: calc(var(--r-xl) - 1px);
+    background: var(--bg-elev-solid);
+    /* Dark, brand-tinted map without an API key. */
+    filter: invert(0.92) hue-rotate(195deg) saturate(0.55) brightness(0.9) contrast(0.95);
+  }
+
+  /* Tint layer so the map sits inside the palette. */
+  .map__frame::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: calc(var(--r-xl) - 1px);
+    background:
+      radial-gradient(60% 80% at 50% 50%, transparent 40%, color-mix(in srgb, var(--c-night) 70%, transparent)),
+      linear-gradient(140deg, color-mix(in srgb, var(--c-cyan) 8%, transparent), color-mix(in srgb, var(--c-magenta) 10%, transparent));
+    mix-blend-mode: normal;
+    pointer-events: none;
+  }
+
+  .map__card {
+    position: absolute;
+    z-index: var(--z-base);
+    left: var(--sp-4);
+    right: var(--sp-4);
+    bottom: var(--sp-4);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--sp-3) var(--sp-4);
+    padding: var(--sp-4);
+    border-radius: var(--r-lg);
+    border: 1px solid var(--line-strong);
+    background: color-mix(in srgb, var(--bg-elev-solid) 88%, transparent);
+    backdrop-filter: blur(16px);
+  }
+
+  @media (min-width: 640px) {
+    .map__card {
+      left: var(--sp-6);
+      right: auto;
+      bottom: var(--sp-6);
+      grid-template-columns: auto auto auto;
+      padding: var(--sp-4) var(--sp-5);
+    }
+  }
+
+  .map__pin {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--r-pill);
+    color: var(--c-white);
+    background: var(--grad-brand);
+    box-shadow: var(--glow-sm);
+  }
+
+  .map__pulse {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1px solid var(--c-pink);
+    animation: pin-pulse 2.4s var(--ease-out) 1s 3 both;
+  }
+
+  @keyframes pin-pulse {
+    from {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(2.2);
+    }
+  }
+
+  .map__address {
+    display: grid;
+    line-height: 1.35;
+    min-width: 0;
+  }
+
+  .map__address strong {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: var(--fs-md);
+  }
+
+  .map__address span {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .map__link {
+    grid-column: 1 / -1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-4);
+    border-radius: var(--r-pill);
+    border: 1px solid var(--line-strong);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background var(--dur) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  @media (min-width: 640px) {
+    .map__link {
+      grid-column: auto;
+      margin-left: var(--sp-3);
+    }
+  }
+
+  .map__link:hover {
+    color: var(--c-white);
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--c-cyan) 12%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .map__pulse {
+      animation: none;
+      opacity: 0;
+    }
+  }
+</style>

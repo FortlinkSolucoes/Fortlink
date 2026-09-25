@@ -1,0 +1,64 @@
+---
+/**
+ * Live dot ("ponto vivo", Alfa `pulsa`): small cyan dot breathing with --glow-sm.
+ * Optional `label` renders a small uppercase display-font caption beside it
+ * (e.g. "Diagnóstico gratuito"). Static in reduced motion, or with `static` when the
+ * block already has its own infinite accent (1 accent per block).
+ */
+interface Props {
+  label?: string;
+  as?: 'span' | 'p' | 'div';
+  static?: boolean;
+  class?: string;
+  [attr: string]: unknown;
+}
+
+const { label, as: Tag = 'span', class: className, static: isStatic = false, ...rest } = Astro.props;
+---
+
+<Tag class:list={['pulse-dot', { 'pulse-dot--static': isStatic }, className]} {...rest}>
+  <span class="pulse-dot__dot" aria-hidden="true"></span>
+  {label && <span class="pulse-dot__label">{label}</span>}
+</Tag>
+
+<style>
+  .pulse-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+
+  .pulse-dot__dot {
+    position: relative;
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c-cyan);
+    box-shadow: var(--glow-sm);
+  }
+
+  /* Faint halo ring (static) so the dot reads as "live" even without motion. */
+  .pulse-dot__dot::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--c-cyan) 30%, transparent);
+  }
+
+  .pulse-dot__label {
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html:not(.reduced-motion)) .pulse-dot:not(.pulse-dot--static) .pulse-dot__dot {
+      animation: fl-dot 2s var(--ease-in-out) infinite;
+    }
+  }
+</style>
