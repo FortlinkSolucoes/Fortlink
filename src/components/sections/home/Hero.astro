@@ -98,7 +98,10 @@ const location = `${site.address.street} · ${site.address.city}`;
     right: max(var(--gutter), calc((100% - var(--container)) / 2));
     height: min(78svh, 720px);
     translate: 12% -50%;
-    opacity: 0.14;
+    /* Watermark: barely there, fading out towards the headline and the bottom edge. */
+    opacity: 0.07;
+    -webkit-mask-image: radial-gradient(ellipse 65% 60% at 60% 40%, #000 30%, transparent 85%);
+    mask-image: radial-gradient(ellipse 65% 60% at 60% 40%, #000 30%, transparent 85%);
   }
 
   /* Outline only: no fill, no halo — a quiet watermark, not a second focal point. */
