@@ -85,6 +85,16 @@
       root.classList.remove('is-visible');
     });
 
+    // A modal <dialog> renders in the browser's top layer, above any z-index, so our cursor
+    // would sit behind it with the native one hidden. Hand back the native cursor while one is open.
+    const syncDialog = () => html.classList.toggle('cursor-off', !!document.querySelector('dialog[open]'));
+    new MutationObserver(syncDialog).observe(document.body, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['open'],
+    });
+    syncDialog();
+
     window.addEventListener('pointerdown', () => root.classList.add('is-down'));
     window.addEventListener('pointerup', () => root.classList.remove('is-down'));
     window.addEventListener('blur', () => {
@@ -117,6 +127,19 @@
 
     :global(html.has-cursor) :global(:is(input, textarea, [contenteditable='true'])) {
       cursor: text !important;
+    }
+
+    :global(html.has-cursor.cursor-off),
+    :global(html.has-cursor.cursor-off *) {
+      cursor: auto !important;
+    }
+
+    :global(html.has-cursor.cursor-off) :global(:is(a[href], button, [role='button'], select, label[for])) {
+      cursor: pointer !important;
+    }
+
+    :global(html.js.has-cursor.cursor-off) .cursor {
+      display: none;
     }
   }
 
