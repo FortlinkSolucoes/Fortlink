@@ -2,24 +2,25 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Hero from '@/components/sections/home/Hero.astro';
 import MarqueeBand from '@/components/sections/home/MarqueeBand.astro';
-import Pains from '@/components/sections/home/Pains.astro';
+import Offerings from '@/components/sections/home/Offerings.astro';
 import About from '@/components/sections/home/About.astro';
-import Services from '@/components/sections/home/Services.astro';
+import Pains from '@/components/sections/home/Pains.astro';
 import OfferBand from '@/components/sections/shared/OfferBand.astro';
 import ProcessTimeline from '@/components/sections/shared/ProcessTimeline.astro';
 ---
 
 <!--
-  Conversion order (Alfa): promise → pain in the customer's words → who we are → what we do →
-  the offer → what happens after the click. Mission/vision (Purpose) left the home: it doesn't convert.
+  Order (owner's call, 2026-09-26): what we offer first, then who we are.
+  promise → what we offer (3-second scan; detail lives on /servicos) → who we are →
+  pain in the customer's words → the free-diagnosis offer → what happens after the click.
   The footer closes with the human/local CTA (Alfa #6), not a second copy of the offer.
 -->
 <BaseLayout preloader>
   <Hero />
   <MarqueeBand />
-  <Pains />
+  <Offerings />
   <About />
-  <Services />
+  <Pains />
   <OfferBand />
   <ProcessTimeline />
 </BaseLayout>

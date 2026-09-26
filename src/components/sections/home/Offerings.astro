@@ -1,0 +1,129 @@
+---
+/**
+ * "O que oferecemos" — the 3-second scan: icon + name for every service, nothing else.
+ * Each tile opens that service in focus on /servicos (#slug). Details live there, not here.
+ */
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import Icon from '@/components/ui/Icon.astro';
+import Button from '@/components/ui/Button.astro';
+import { services } from '@/data/site';
+---
+
+<section class="section offerings" id="o-que-oferecemos" aria-labelledby="o-que-oferecemos-titulo">
+  <div class="container">
+    <SectionHeading
+      id="o-que-oferecemos-titulo"
+      eyebrow="O que oferecemos"
+      title='Da estratégia ao cabo, <span class="text-gradient">um só parceiro de TI</span>.'
+    />
+
+    <ul class="offerings__grid" role="list" data-stagger>
+      {
+        services.map((s) => (
+          <li>
+            <a class="tile" href={`/servicos/#${s.slug}`}>
+              <span class="tile__icon" aria-hidden="true">
+                <Icon name={s.icon} size={22} />
+              </span>
+              <span class="tile__name">{s.title}</span>
+              <span class="tile__arrow" aria-hidden="true">
+                <Icon name="arrow-right" size={16} />
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="offerings__more" data-reveal="up">
+      <Button href="/servicos/" variant="ghost" arrow="right">Ver detalhes dos serviços</Button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .offerings__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-3);
+    margin: var(--head-gap) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tile {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    height: 100%;
+    min-height: 4rem;
+    padding: var(--sp-4) var(--sp-5);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: var(--bg-elev);
+    font-family: var(--font-heading);
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--text);
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .tile:hover,
+  .tile:focus-visible {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  .tile__icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--line);
+    color: var(--accent);
+  }
+
+  .tile__name {
+    flex: 1;
+  }
+
+  .tile__arrow {
+    color: var(--text-dim);
+    transition:
+      transform var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  .tile:hover .tile__arrow,
+  .tile:focus-visible .tile__arrow {
+    color: var(--accent);
+    transform: translateX(3px);
+  }
+
+  .offerings__more {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--sp-7);
+  }
+
+  @media (min-width: 640px) {
+    .offerings__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* The lead service (consulting, the entry point) spans two cells: 11 services fill a clean
+       12-cell grid in both the 2- and 3-column layouts, with no gap in the last row. */
+    .offerings__grid > li:first-child {
+      grid-column: span 2;
+    }
+  }
+
+  @media (min-width: 960px) {
+    .offerings__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

@@ -1,0 +1,460 @@
+---
+/**
+ * Pick a service, read it in focus.
+ * Desktop (≥960px): plain list on the left, one sticky detail panel on the right.
+ * Mobile: the same markup reads as an accordion — tap a service, it opens in place.
+ * One service is open at a time; the URL hash (#slug) selects it (deep links from the home pains).
+ */
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import ServiceIcon from '@/components/ui/ServiceIcon.astro';
+import Icon from '@/components/ui/Icon.astro';
+import Button from '@/components/ui/Button.astro';
+import { services, pains, serviceWhatsapp } from '@/data/site';
+
+const painBySlug = new Map<string, string>(pains.map((p) => [p.slug, p.text]));
+const [first] = services;
+// Every trigger stacks in column 1; the panel spans all their rows plus a flexible last row,
+// so a tall panel grows that last row instead of stretching the list items.
+const gridRows = `repeat(${services.length}, auto) 1fr`;
+---
+
+<section class="section explorer-section" id="servicos-lista" aria-labelledby="servicos-lista-titulo">
+  <div class="container">
+    <SectionHeading
+      id="servicos-lista-titulo"
+      eyebrow="Escolha o serviço"
+      title="O que a sua empresa precisa hoje?"
+      lead="Toque em um serviço para ver tudo sobre ele."
+    />
+
+    <div class="explorer" style={`--rows: ${gridRows}`} data-svc-explorer>
+      {
+        services.map((s) => {
+          const open = s.slug === first.slug;
+          const pain = painBySlug.get(s.slug);
+          return (
+            <div class="explorer__item">
+              <h3 class="explorer__head" id={s.slug}>
+                <button
+                  type="button"
+                  class="explorer__trigger"
+                  id={`servico-${s.slug}`}
+                  aria-expanded={open ? 'true' : 'false'}
+                  aria-disabled={open ? 'true' : undefined}
+                  aria-controls={`painel-${s.slug}`}
+                  data-svc-trigger={s.slug}
+                >
+                  <span class="explorer__icon" aria-hidden="true">
+                    <Icon name={s.icon} size={20} />
+                  </span>
+                  <span class="explorer__name">{s.title}</span>
+                  <span class="explorer__chevron" aria-hidden="true">
+                    <Icon name="arrow-right" size={16} />
+                  </span>
+                </button>
+              </h3>
+
+              <div
+                class="panel"
+                id={`painel-${s.slug}`}
+                role="region"
+                aria-labelledby={`servico-${s.slug}`}
+                data-svc-panel={s.slug}
+                hidden={!open}
+              >
+                <div class="panel__top" aria-hidden="true">
+                  <ServiceIcon name={s.icon} size={30} />
+                  <p class="panel__title">{s.title}</p>
+                </div>
+
+                <p class="panel__summary">{s.summary}</p>
+
+                {pain && (
+                  <div class="panel__block">
+                    <p class="panel__label">Resolve quando…</p>
+                    <p class="panel__pain">“{pain}”</p>
+                  </div>
+                )}
+
+                <div class="panel__block">
+                  <p class="panel__label">O que fazemos</p>
+                  <ul class="panel__list" role="list">
+                    {s.details.map((d) => (
+                      <li>
+                        <Icon name="check" size={18} />
+                        <span>{d}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div class="panel__actions">
+                  <Button href={serviceWhatsapp(s.title)} variant="primary" icon="whatsapp" external>
+                    Falar sobre {s.title}
+                  </Button>
+                  <p class="panel__alt">
+                    Prefere por escrito? <a href={`/contato/?servico=${s.slug}`}>Enviar pelo formulário</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+    <!-- Pre-paint sync for deep links (#slug / legacy ?abrir=): the first service never flashes. -->
+    <script is:inline>
+      (function () {
+        var slug = new URLSearchParams(location.search).get('abrir') || location.hash.slice(1);
+        try {
+          slug = decodeURIComponent(slug);
+        } catch (e) {}
+        if (!slug || !document.getElementById('painel-' + slug)) return;
+        document.querySelectorAll('[data-svc-trigger]').forEach(function (t) {
+          var on = t.getAttribute('data-svc-trigger') === slug;
+          t.setAttribute('aria-expanded', String(on));
+          if (on) t.setAttribute('aria-disabled', 'true');
+          else t.removeAttribute('aria-disabled');
+          document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+        });
+      })();
+    </script>
+  </div>
+  <noscript>
+    <style>
+      [data-svc-panel][hidden] {
+        display: grid !important;
+      }
+    </style>
+  </noscript>
+</section>
+
+<style>
+  .explorer {
+    display: grid;
+    gap: var(--sp-3);
+    margin-top: var(--head-gap);
+  }
+
+  .explorer__item {
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: var(--bg-elev);
+    overflow: clip;
+  }
+
+  .explorer__head {
+    margin: 0;
+    font: inherit;
+    scroll-margin-top: calc(var(--header-h) + var(--sp-4));
+  }
+
+  .explorer__trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    width: 100%;
+    min-height: 3.5rem;
+    padding: var(--sp-4) var(--sp-5);
+    text-align: left;
+    font-family: var(--font-heading);
+    font-size: var(--fs-md);
+    font-weight: 500;
+    color: var(--text-muted);
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .explorer__trigger:hover {
+    color: var(--text);
+  }
+
+  .explorer__trigger[aria-expanded='true'] {
+    color: var(--text);
+  }
+
+  .explorer__icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--line);
+    color: var(--text-muted);
+    transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .explorer__trigger[aria-expanded='true'] .explorer__icon {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  .explorer__name {
+    flex: 1;
+  }
+
+  .explorer__chevron {
+    color: var(--text-dim);
+    transform: rotate(90deg);
+    transition: transform var(--dur) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  }
+
+  .explorer__trigger[aria-expanded='true'] .explorer__chevron {
+    color: var(--accent);
+    transform: rotate(-90deg);
+  }
+
+  /* ---------- Detail panel ---------- */
+  .panel {
+    display: grid;
+    gap: var(--sp-5);
+    padding: 0 var(--sp-5) var(--sp-6);
+  }
+
+  .panel[hidden] {
+    display: none;
+  }
+
+  .panel__top {
+    display: none;
+  }
+
+  .panel__summary {
+    font-size: var(--fs-md);
+    line-height: 1.6;
+    color: var(--text);
+    max-width: 60ch;
+  }
+
+  .panel__block {
+    display: grid;
+    gap: var(--sp-2);
+  }
+
+  .panel__label {
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .panel__pain {
+    font-size: var(--fs-md);
+    font-style: italic;
+    color: var(--text-muted);
+  }
+
+  .panel__list {
+    display: grid;
+    gap: var(--sp-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .panel__list li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-3);
+    color: var(--text);
+  }
+
+  .panel__list li :global(svg) {
+    flex: none;
+    margin-top: 0.2em;
+    color: var(--accent);
+  }
+
+  .panel__actions {
+    display: grid;
+    justify-items: start;
+    gap: var(--sp-3);
+    padding-top: var(--sp-2);
+  }
+
+  .panel__alt {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+  }
+
+  .panel__alt a {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html:not(.reduced-motion)) .panel:not([hidden]) {
+      animation: panel-in var(--dur) var(--ease-out);
+    }
+  }
+
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  /* ---------- Desktop: list + sticky panel ---------- */
+  @media (min-width: 960px) {
+    .explorer {
+      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+      grid-template-rows: var(--rows);
+      column-gap: var(--sp-8);
+      row-gap: var(--sp-1);
+    }
+
+    .explorer__item {
+      display: contents;
+    }
+
+    .explorer__head {
+      grid-column: 1;
+    }
+
+    .explorer__trigger {
+      border-radius: var(--r-md);
+      padding: var(--sp-3) var(--sp-4);
+      font-size: var(--fs-base);
+    }
+
+    .explorer__trigger:hover {
+      background: var(--bg-elev);
+    }
+
+    .explorer__trigger[aria-expanded='true'] {
+      background: var(--bg-elev);
+      box-shadow: inset 2px 0 0 var(--accent);
+    }
+
+    .explorer__chevron {
+      transform: none;
+      opacity: 0;
+    }
+
+    .explorer__trigger[aria-expanded='true'] .explorer__chevron {
+      transform: none;
+      opacity: 1;
+    }
+
+    .panel {
+      grid-column: 2;
+      grid-row: 1 / -1;
+      align-self: start;
+      position: sticky;
+      top: calc(var(--header-h) + var(--sp-5));
+      gap: var(--sp-6);
+      padding: var(--sp-8);
+      border: 1px solid var(--line);
+      border-radius: var(--r-xl);
+      background: var(--bg-elev);
+    }
+
+    .panel__top {
+      display: grid;
+      justify-items: start;
+      gap: var(--sp-5);
+    }
+
+    .panel__title {
+      font-family: var(--font-heading);
+      font-size: var(--fs-xl);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -0.025em;
+      color: var(--text);
+    }
+
+    .panel__summary {
+      font-size: var(--fs-lg);
+    }
+  }
+</style>
+
+<script>
+  import { getLenis, onMotionReady } from '@/scripts/motion';
+
+  const root = document.querySelector<HTMLElement>('[data-svc-explorer]');
+  if (root) initExplorer(root);
+
+  function initExplorer(explorer: HTMLElement) {
+    const triggers = [...explorer.querySelectorAll<HTMLButtonElement>('[data-svc-trigger]')];
+    const slugs = triggers.map((t) => t.dataset.svcTrigger ?? '');
+    const desktop = window.matchMedia('(min-width: 960px)');
+
+    const isSlug = (value: string | null | undefined): value is string => !!value && slugs.includes(value);
+
+    function select(slug: string) {
+      for (const t of triggers) {
+        const on = t.dataset.svcTrigger === slug;
+        t.setAttribute('aria-expanded', String(on));
+        // Always one open: the open header can't collapse, so it's marked disabled (WAI-ARIA APG accordion).
+        if (on) t.setAttribute('aria-disabled', 'true');
+        else t.removeAttribute('aria-disabled');
+        const panel = document.getElementById(t.getAttribute('aria-controls') ?? '');
+        if (panel) panel.hidden = !on;
+      }
+      // Keep unrelated query params (utm_*, ref…); drop only the legacy ?abrir=.
+      const url = new URL(location.href);
+      url.searchParams.delete('abrir');
+      url.hash = slug;
+      history.replaceState(null, '', url);
+    }
+
+    // Desktop keeps the list + panel in view together; mobile brings the opened item to the top.
+    function focusView(slug: string, immediate = false) {
+      const target = desktop.matches ? explorer : document.getElementById(slug);
+      if (!target) return;
+      const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 76;
+      const offset = -header - 16;
+      const lenis = getLenis();
+      if (lenis) lenis.scrollTo(target, { offset, immediate });
+      else window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY + offset });
+    }
+
+    function slugFromUrl(): string | null {
+      const fromQuery = new URLSearchParams(location.search).get('abrir'); // legacy links
+      let fromHash = location.hash.slice(1);
+      try {
+        fromHash = decodeURIComponent(fromHash);
+      } catch {
+        // Malformed percent-encoding (e.g. #50%): keep the raw value; it just won't match a slug.
+      }
+      if (isSlug(fromQuery)) return fromQuery;
+      if (isSlug(fromHash)) return fromHash;
+      return null;
+    }
+
+    triggers.forEach((t, i) => {
+      t.addEventListener('click', () => {
+        const slug = t.dataset.svcTrigger ?? '';
+        if (t.getAttribute('aria-disabled') === 'true') return;
+        select(slug);
+        if (!desktop.matches) focusView(slug);
+      });
+
+      t.addEventListener('keydown', (e) => {
+        const moves: Record<string, number> = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: triggers.length - 1 };
+        const next = moves[e.key];
+        if (next === undefined) return;
+        e.preventDefault();
+        triggers[(next + triggers.length) % triggers.length].focus();
+      });
+    });
+
+    window.addEventListener('hashchange', () => {
+      const slug = slugFromUrl();
+      if (slug) select(slug);
+    });
+
+    const initial = slugFromUrl();
+    if (initial) {
+      select(initial);
+      onMotionReady(() => requestAnimationFrame(() => focusView(initial, true)));
+    }
+  }
+</script>

@@ -23,9 +23,10 @@ export const site = {
 export const whatsappLink = (text = 'Olá FortLink, gostaria de mais informações.') =>
   `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(text)}`;
 
+// Owner's call (2026-09-26): what we offer comes before who we are.
 export const nav = [
-  { href: '/', label: 'Quem somos' },
   { href: '/servicos/', label: 'Serviços' },
+  { href: '/', label: 'Quem somos' },
   { href: '/contato/', label: 'Contato' },
 ] as const;
 

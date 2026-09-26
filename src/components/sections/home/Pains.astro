@@ -31,7 +31,7 @@ const title = `${painsHeading.title} <span class="pains__accent">${painsHeading.
       {
         rows.map((row) => (
           <li class="pain">
-            <a class="pain__link" href={`/servicos/?abrir=${row.slug}#${row.slug}`}>
+            <a class="pain__link" href={`/servicos/#${row.slug}`}>
               <span class="pain__n" aria-hidden="true">
                 {row.n}
               </span>
@@ -54,7 +54,8 @@ const title = `${painsHeading.title} <span class="pains__accent">${painsHeading.
       <div data-reveal="up">
         <ShimmerText as="p" class="pains__closing-text">{painsHeading.closing}</ShimmerText>
       </div>
-      <div data-reveal="up" data-reveal-delay="0.15">
+      <div class="pains__actions" data-reveal="up" data-reveal-delay="0.15">
+        <Button href="/servicos/" variant="primary" arrow="right">Ver todos os serviços</Button>
         <Button href={whatsappLink(painsHeading.whatsappText)} variant="ghost" icon="whatsapp" external>
           Falar no WhatsApp
         </Button>
@@ -64,6 +65,13 @@ const title = `${painsHeading.title} <span class="pains__accent">${painsHeading.
 </section>
 
 <style>
+  .pains__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-3);
+  }
+
   .pains :global(.pains__accent) {
     color: var(--accent);
   }
