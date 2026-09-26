@@ -1,0 +1,1 @@
+import{a as e,c as t,o as n}from"./motion.Sv43ciFn.js";e(()=>{if(n())return;let e=document.querySelector(`[data-about-lit]`);e&&t.fromTo(e.querySelectorAll(`.about__word`),{opacity:.15},{opacity:1,ease:`none`,stagger:.1,scrollTrigger:{trigger:e,start:`top 80%`,end:`bottom 50%`,scrub:.6}})});
