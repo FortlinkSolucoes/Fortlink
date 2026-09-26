@@ -118,6 +118,31 @@ test.describe('serviços — escolher e ler em foco', () => {
   });
 });
 
+test.describe('ordem: serviços antes de quem somos', () => {
+  test('menu mostra Serviços antes de Quem somos', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'menu desktop');
+    await page.goto('/');
+
+    const labels = await page.getByRole('navigation', { name: 'Principal' }).getByRole('link').allInnerTexts();
+    expect(labels.map((l) => l.trim())).toEqual(['Serviços', 'Quem somos', 'Contato']);
+  });
+
+  test('home apresenta o que oferecemos antes de quem somos', async ({ page }) => {
+    await page.goto('/');
+
+    const offer = page.locator('#o-que-oferecemos');
+    await expect(offer.getByRole('heading', { level: 2 })).toBeAttached();
+    await expect(offer.locator('a[href^="/servicos/#"]')).toHaveCount(11);
+
+    const order = await page.evaluate(() => {
+      const a = document.querySelector('#o-que-oferecemos');
+      const b = document.querySelector('#quem-somos');
+      return a && b ? a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING : 0;
+    });
+    expect(order).toBeTruthy();
+  });
+});
+
 test.describe('home', () => {
   test('cada dor leva direto ao serviço em foco', async ({ page }) => {
     await page.goto('/');
