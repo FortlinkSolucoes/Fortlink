@@ -1,7 +1,7 @@
 ---
 import SectionHeading from '@/components/ui/SectionHeading.astro';
 import Icon from '@/components/ui/Icon.astro';
-import { services, servicesPage } from '@/data/site';
+import { servicesPage } from '@/data/site';
 
 type Pt = readonly [number, number];
 
@@ -38,7 +38,6 @@ const pads: readonly Pt[] = [
   [620, 180], [1120, 150], [1200, 320], [860, 220], [1260, 520], [1160, 700], [240, 640], [1060, 100],
 ];
 
-const total = String(services.length).padStart(2, '0');
 ---
 
 <section class="hero" data-svc-hero>
@@ -95,16 +94,7 @@ const total = String(services.length).padStart(2, '0');
       />
     </div>
 
-    <div class="hero__meta" data-reveal="up" data-reveal-delay="0.2">
-      <p class="hero__stat">
-        <span class="hero__stat-num" aria-hidden="true">{total}</span>
-        <span class="hero__stat-label">
-          <span class="sr-only">{services.length}</span> soluções integradas para a sua empresa não parar
-        </span>
-      </p>
-    </div>
-
-    <a class="hero__cue" href="/servicos/#portfolio" data-svc-link="portfolio" data-cursor="Ver">
+    <a class="hero__cue" href="#servicos-lista" data-cursor="Ver">
       <span>Explorar serviços</span>
       <span class="hero__cue-icon"><Icon name="arrow-right" size={16} /></span>
     </a>
@@ -248,36 +238,6 @@ const total = String(services.length).padStart(2, '0');
 
   .hero__heading {
     max-width: 60rem;
-  }
-
-  .hero__meta {
-    display: grid;
-    gap: var(--sp-6);
-    padding-top: var(--sp-6);
-    border-top: 1px solid var(--line);
-  }
-
-  .hero__stat {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-4);
-    max-width: 26rem;
-  }
-
-  .hero__stat-num {
-    font-family: var(--font-display);
-    font-size: var(--fs-2xl);
-    line-height: 1;
-    background: var(--grad-text);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .hero__stat-label {
-    color: var(--text-muted);
-    font-size: var(--fs-sm);
-    line-height: 1.45;
   }
 
   .hero__cue {

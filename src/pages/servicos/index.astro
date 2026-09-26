@@ -1,10 +1,9 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import ServicesHero from '@/components/sections/servicos/ServicesHero.astro';
-import ServicesGrid from '@/components/sections/servicos/ServicesGrid.astro';
+import ServicesExplorer from '@/components/sections/servicos/ServicesExplorer.astro';
 import ServicesDifferentials from '@/components/sections/servicos/ServicesDifferentials.astro';
 import ProcessTimeline from '@/components/sections/shared/ProcessTimeline.astro';
-import ServiceDialog from '@/components/sections/servicos/ServiceDialog.astro';
 import OfferBand from '@/components/sections/shared/OfferBand.astro';
 import { site, services } from '@/data/site';
 
@@ -36,10 +35,9 @@ const jsonLd = {
 
 <BaseLayout title="Serviços" description={description} footerCta={false}>
   <ServicesHero />
-  <ServicesGrid />
+  <ServicesExplorer />
   <ServicesDifferentials />
   <ProcessTimeline tight />
   <OfferBand />
-  <ServiceDialog />
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 </BaseLayout>
