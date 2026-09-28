@@ -173,8 +173,10 @@ test.describe('feedback 28/09', () => {
     }
   });
 
-  test('linha do "Como trabalhamos" é reta', async ({ page }) => {
+  test('faixa animada dos serviços é reta (sem inclinação)', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('.process__circuit--h [data-process-line]')).toHaveAttribute('d', 'M125 60 H875');
+    const band = page.locator('.band__strip');
+    await expect(band).toHaveCSS('rotate', 'none');
+    await expect(band).toHaveCSS('transform', 'none');
   });
 });
