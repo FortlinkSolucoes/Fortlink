@@ -1,5 +1,5 @@
 ---
-import { site, hero, offer, whatsappLink } from '@/data/site';
+import { hero, highlights, offer, whatsappLink } from '@/data/site';
 import NetworkCanvas from '@/components/fx/NetworkCanvas.astro';
 import Button from '@/components/ui/Button.astro';
 import Icon from '@/components/ui/Icon.astro';
@@ -8,8 +8,6 @@ import Logo from '@/components/ui/Logo.astro';
 // Alfa #1: the headline closes on a full stop in the solid accent colour.
 const headline =
   'Tecnologia segura para empresas que <span class="text-gradient">não podem <span class="hero__end">parar<span class="hero__stop">.</span></span></span>';
-// Concrete local reference (confirmed address) instead of repeating the eyebrow's city.
-const location = `${site.address.street} · ${site.address.city}`;
 ---
 
 <section class="hero" data-hero aria-labelledby="hero-title">
@@ -22,7 +20,7 @@ const location = `${site.address.street} · ${site.address.city}`;
   </div>
 
   <div class="container hero__inner" data-hero-inner>
-    <p class="eyebrow" data-hero-in>Soluções em TI · {site.address.city}</p>
+    <p class="eyebrow" data-hero-in>Soluções corporativas em TI</p>
 
     <h1 id="hero-title" class="hero__title t-display" data-split set:html={headline} />
 
@@ -42,20 +40,17 @@ const location = `${site.address.street} · ${site.address.city}`;
       </div>
     </div>
 
-    <!-- Alfa "meta" strip, 3 items: offer · proof · local reference. -->
+    <!-- Alfa "meta" strip, 3 items: offer · how · proof. No city: the business isn't niched to one place. -->
     <ul class="hero__meta" role="list">
       <li class="hero__meta-offer" data-hero-in>
         <strong>{offer.label}</strong>, sem compromisso
       </li>
       <li data-hero-in>{offer.modes.join(' ou ').replace('Remoto', 'remoto')}</li>
-      <li class="hero__meta-local" data-hero-in>
-        <Icon name="pin" size={16} />
-        <span>{location}</span>
-      </li>
+      <li data-hero-in>{highlights[0]}</li>
     </ul>
   </div>
 
-  <a class="hero__scroll" href="#problemas" data-hero-in data-cursor="Rolar">
+  <a class="hero__scroll" href="#o-que-oferecemos" data-hero-in>
     <span class="hero__scroll-line" aria-hidden="true"><span></span></span>
     <span class="hero__scroll-label">Role para explorar</span>
   </a>
@@ -234,25 +229,13 @@ const location = `${site.address.street} · ${site.address.city}`;
     color: var(--text-muted);
   }
 
-  .hero__meta-offer,
-  .hero__meta-local {
+  .hero__meta-offer {
     grid-column: 1 / -1;
   }
 
   .hero__meta-offer strong {
     color: var(--text);
     font-weight: 600;
-  }
-
-  .hero__meta-local {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
-  }
-
-  .hero__meta-local :global(svg) {
-    flex: none;
-    color: var(--text-dim);
   }
 
   .hero__scroll {

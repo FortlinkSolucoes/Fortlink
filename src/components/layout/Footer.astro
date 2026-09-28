@@ -24,7 +24,7 @@ const telHref = `tel:+${site.whatsapp}`;
 
   {cta && (
   <section class="container ftr-cta" aria-labelledby="ftr-cta-title" data-ftr-cta data-wa-hide>
-    <PulseDot as="p" label={`${city} · ${state}`} class="ftr-badge" />
+    <PulseDot as="p" label="Atendimento presencial e remoto" class="ftr-badge" />
     <h2 id="ftr-cta-title" class="ftr-title t-display" data-split>
       O melhor jeito de entender é <em class="ftr-em">conversar</em> com a gente.
     </h2>
@@ -45,7 +45,6 @@ const telHref = `tel:+${site.whatsapp}`;
     </div>
 
     <p class="ftr-lead muted">
-      Estamos na <a class="ftr-lead-link" href={mapsUrl} target="_blank" rel="noopener noreferrer">{street}, {city}<span class="sr-only"> (ver no mapa, abre em nova aba)</span></a>.
       Chame no WhatsApp ou ligue: {site.whatsappDisplay}.
     </p>
     <div class="ftr-actions">
@@ -149,7 +148,6 @@ const telHref = `tel:+${site.whatsapp}`;
 
   <div class="container ftr-bottom">
     <p>© {site.year} {site.name}. Todos os direitos reservados.</p>
-    <p class="ftr-bottom-loc">{city} — {state}, Brasil</p>
     <button type="button" class="ftr-top" data-to-top>
       Voltar ao topo
       <span class="ftr-top-icon" aria-hidden="true"><Icon name="arrow-up-right" size={16} /></span>
@@ -298,18 +296,6 @@ const telHref = `tel:+${site.whatsapp}`;
   .ftr-lead {
     max-width: 48ch;
     font-size: var(--fs-md);
-  }
-
-  .ftr-lead-link {
-    color: var(--text);
-    text-decoration: underline;
-    text-decoration-color: var(--line-strong);
-    text-underline-offset: 4px;
-    transition: text-decoration-color var(--dur-fast) var(--ease-out);
-  }
-
-  .ftr-lead-link:is(:hover, :focus-visible) {
-    text-decoration-color: var(--c-cyan);
   }
 
   .ftr-actions {
@@ -505,12 +491,6 @@ const telHref = `tel:+${site.whatsapp}`;
     border-top: 1px solid var(--line);
     font-size: var(--fs-xs);
     color: var(--text-dim);
-  }
-
-  .ftr-bottom-loc {
-    font-family: var(--font-display);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
   }
 
   .ftr-top {

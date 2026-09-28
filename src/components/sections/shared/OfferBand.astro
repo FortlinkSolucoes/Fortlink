@@ -37,7 +37,6 @@ const [before, after = ''] = offer.title.split(offer.emphasis);
     <div class="offer__body" data-reveal="up" data-reveal-delay="0.15">
       <ul class="offer__chips" role="list">
         {offer.modes.map((m) => <li>{m}</li>)}
-        <li>{offer.area}</li>
       </ul>
       <p class="offer__text">{offer.text}</p>
       <a
