@@ -29,10 +29,7 @@ const items = services.map((s) => s.title);
       color-mix(in srgb, var(--c-ink) 70%, transparent) 80%,
       transparent
     );
-    /* Slight tilt keeps the band feeling kinetic even when idle. */
-    rotate: -1.5deg;
-    width: 104%;
-    margin-inline: -2%;
+    /* Straight band (owner, 2026-09-28): no tilt, full width. */
   }
 
   .band__strip::before,
