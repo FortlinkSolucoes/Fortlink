@@ -209,6 +209,8 @@ const gridRows = `repeat(${services.length}, auto) 1fr`;
   /* ---------- Detail panel ---------- */
   .panel {
     display: grid;
+    /* minmax(0, 1fr): the track may shrink below its content's min width, so it never widens the page. */
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--sp-5);
     padding: 0 var(--sp-5) var(--sp-6);
   }

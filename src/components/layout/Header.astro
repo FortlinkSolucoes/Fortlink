@@ -8,7 +8,6 @@ const path = Astro.url.pathname.replace(/\/?$/, '/');
 const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
 const isHome = path === '/';
 const offerHref = whatsappLink(offer.whatsappText);
-const addressLine = `${site.address.street} — ${site.address.city}/${site.address.state}`;
 ---
 
 <header class:list={['hdr', { 'hdr--home': isHome }]} data-header>
@@ -92,10 +91,6 @@ const addressLine = `${site.address.street} — ${site.address.city}/${site.addr
           <Icon name="whatsapp" size={18} />{site.whatsappDisplay}
           <span class="sr-only">(abre em nova aba)</span>
         </a>
-      </li>
-      <li>
-        <span class="menu-info-label">Endereço</span>
-        <span class="menu-info-text"><Icon name="pin" size={18} />{addressLine}</span>
       </li>
     </ul>
   </div>
@@ -548,8 +543,7 @@ const addressLine = `${site.address.street} — ${site.address.city}/${site.addr
     color: var(--text-dim);
   }
 
-  .menu-info a,
-  .menu-info-text {
+  .menu-info a {
     display: inline-flex;
     align-items: center;
     gap: var(--sp-2);

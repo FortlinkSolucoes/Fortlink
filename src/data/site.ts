@@ -7,7 +7,7 @@ export const site = {
   url: 'https://www.fortlinksolucoes.com.br',
   tagline: 'Conectando tecnologia, segurança e inovação para o crescimento do seu negócio.',
   description:
-    'Hub de tecnologia em Foz do Iguaçu: infraestrutura de TI, redes corporativas, cabeamento estruturado, suporte técnico, CFTV, firewall e monitoramento NOC para empresas que não podem parar.',
+    'Hub de tecnologia: infraestrutura de TI, redes corporativas, cabeamento estruturado, suporte técnico, CFTV, firewall e monitoramento NOC para empresas que não podem parar.',
   email: 'contato@fortlinksolucoes.com.br',
   whatsapp: '554574008279',
   whatsappDisplay: '(45) 7400-8279',
@@ -53,11 +53,11 @@ export interface Service {
 
 export const services: Service[] = [
   {
-    // Confirmed by the owner (2026-09-24): IT planning and processes are one service.
+    // Owner (2026-09-28): general consulting, named just "Consultoria" on the site.
     slug: 'consultoria',
     icon: 'process',
-    title: 'Consultoria em Planejamento e Processos',
-    summary: 'Planejamento de TI e organização dos processos da sua empresa no mesmo lugar, para a tecnologia trabalhar a favor da operação.',
+    title: 'Consultoria',
+    summary: 'Consultoria em tecnologia para a sua empresa: planejamento, processos e decisões de TI para a tecnologia trabalhar a favor da operação.',
     details: ['Planejamento de TI', 'Mapeamento de processos', 'Melhoria de fluxos de trabalho', 'Alinhamento entre TI e operação'],
   },
   {
@@ -138,12 +138,12 @@ export const highlights = ['Atendimento ágil', 'Monitoramento contínuo', 'Equi
 /** /servicos/ hero lead: what the page is, ending on the entry offer. */
 export const servicesPage = {
   eyebrow: 'Da rede ao datacenter',
-  lead: 'Infraestrutura, suporte, segurança e monitoramento para empresas de Foz do Iguaçu e região. Não sabe qual serviço precisa? Comece pelo diagnóstico gratuito.',
+  lead: 'Infraestrutura, suporte, segurança e monitoramento para empresas que não podem parar. Não sabe qual serviço precisa? Comece pelo diagnóstico gratuito.',
 } as const;
 
 /** Home hero copy. The generic site.tagline stays for SEO only. */
 export const hero = {
-  lead: 'Redes, suporte técnico, CFTV e monitoramento para empresas de Foz do Iguaçu e região. Comece por um diagnóstico gratuito da sua TI.',
+  lead: 'Redes, suporte técnico, CFTV e monitoramento para a sua empresa. Comece por um diagnóstico gratuito da sua TI.',
 } as const;
 
 export const about = {
@@ -189,9 +189,8 @@ export const offer = {
   title: 'Seu diagnóstico de TI é por nossa conta.',
   emphasis: 'por nossa conta',
   text: 'Avaliamos a infraestrutura de TI da sua empresa, apontamos os riscos e as prioridades — e você decide depois, sem compromisso.',
-  // Confirmed by the owner (2026-09-24): in person and remote, Foz do Iguaçu and region.
+  // Confirmed by the owner (2026-09-24): in person and remote. No city/region on the site (2026-09-28: don't niche).
   modes: ['Presencial', 'Remoto'],
-  area: 'Foz do Iguaçu e região',
   cta: 'Agendar diagnóstico gratuito',
   whatsappText: 'Olá FortLink! Quero agendar meu diagnóstico gratuito de TI.',
 } as const;

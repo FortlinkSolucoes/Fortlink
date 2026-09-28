@@ -106,6 +106,16 @@ const tagAttrs = href ? { href } : { type };
       color var(--dur-fast) var(--ease-out);
   }
 
+  /* Phones: long labels ("Falar sobre Instalação de Datacenters") wrap instead of widening the page. */
+  @media (max-width: 639px) {
+    .btn {
+      max-width: 100%;
+      padding-block: var(--sp-3);
+      white-space: normal;
+      text-align: center;
+    }
+  }
+
   .btn--lg {
     --btn-h: 3.75rem;
     --btn-px: var(--sp-7);

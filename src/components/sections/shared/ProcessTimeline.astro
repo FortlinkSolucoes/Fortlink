@@ -14,9 +14,8 @@ interface Props {
 
 const { id = 'como-trabalhamos', tight = false } = Astro.props;
 
-// Circuit trace linking the 4 node centers (x = 125/375/625/875) with PCB-style 45° jogs.
-const hPath =
-  'M125 60 H200 L230 30 H270 L300 60 H375 H450 L480 90 H520 L550 60 H625 H700 L730 30 H770 L800 60 H875';
+// Straight line linking the 4 node centers (x = 125/375/625/875). Owner asked for a straight bar (2026-09-28).
+const hPath = 'M125 60 H875';
 ---
 
 <section class:list={['process section', { 'section--tight': tight }]} id={id}>

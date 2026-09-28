@@ -9,7 +9,7 @@ test.describe('serviços — escolher e ler em foco', () => {
   test('abre com o primeiro serviço em foco e só um painel visível', async ({ page }) => {
     await page.goto('/servicos/');
 
-    await expect(trigger(page, 'Consultoria em Planejamento e Processos')).toHaveAttribute('aria-expanded', 'true');
+    await expect(trigger(page, 'Consultoria')).toHaveAttribute('aria-expanded', 'true');
     await expect(panelOf(page, 'consultoria')).toBeVisible();
     await expect(page.locator('[data-svc-panel]:visible')).toHaveCount(1);
   });
@@ -31,7 +31,7 @@ test.describe('serviços — escolher e ler em foco', () => {
     await expect(panel.getByRole('link', { name: /formulário/ })).toHaveAttribute('href', '/contato/?servico=cftv');
 
     await expect(page.locator('[data-svc-panel]:visible')).toHaveCount(1);
-    await expect(trigger(page, 'Consultoria em Planejamento e Processos')).toHaveAttribute('aria-expanded', 'false');
+    await expect(trigger(page, 'Consultoria')).toHaveAttribute('aria-expanded', 'false');
     await expect(page).toHaveURL(/#cftv$/);
   });
 
@@ -78,10 +78,11 @@ test.describe('serviços — escolher e ler em foco', () => {
     await trigger(page, 'CFTV e Segurança').click();
 
     await expect(trigger(page, 'CFTV e Segurança')).toHaveAttribute('aria-disabled', 'true');
-    await expect(trigger(page, 'Consultoria em Planejamento e Processos')).not.toHaveAttribute('aria-disabled', 'true');
+    await expect(trigger(page, 'Consultoria')).not.toHaveAttribute('aria-disabled', 'true');
 
-    // Playwright won't click an aria-disabled control on its own; force it to prove the click is a no-op.
-    await trigger(page, 'CFTV e Segurança').click({ force: true });
+    // Playwright won't click an aria-disabled control, and on mobile the page is still smooth-scrolling
+    // to the opened item — dispatch the click on the element itself (position-independent) to prove it's a no-op.
+    await trigger(page, 'CFTV e Segurança').dispatchEvent('click');
     await expect(panelOf(page, 'cftv')).toBeVisible();
   });
 
@@ -96,7 +97,7 @@ test.describe('serviços — escolher e ler em foco', () => {
   test('funciona pelo teclado', async ({ page }) => {
     await page.goto('/servicos/');
 
-    await trigger(page, 'Consultoria em Planejamento e Processos').focus();
+    await trigger(page, 'Consultoria').focus();
     await page.keyboard.press('ArrowDown');
     await expect(trigger(page, 'Infraestrutura de Redes')).toBeFocused();
     await page.keyboard.press('Enter');
@@ -154,5 +155,26 @@ test.describe('home', () => {
     await page.goto('/');
 
     await expect(page.locator('#problemas').getByRole('link', { name: /Ver todos os serviços/ })).toBeAttached();
+  });
+});
+
+test.describe('feedback 28/09', () => {
+  test('não nicha o negócio: sem "Foz do Iguaçu" no conteúdo das páginas', async ({ page }) => {
+    for (const path of ['/', '/servicos/']) {
+      await page.goto(path);
+      await expect(page.locator('main')).not.toContainText('Foz do Iguaçu');
+    }
+  });
+
+  test('cursor sem bolhas de texto ("Ver", "Abrir", "Rolar")', async ({ page }) => {
+    for (const path of ['/', '/servicos/', '/contato/']) {
+      await page.goto(path);
+      await expect(page.locator('[data-cursor]:not([data-cursor=""])')).toHaveCount(0);
+    }
+  });
+
+  test('linha do "Como trabalhamos" é reta', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('.process__circuit--h [data-process-line]')).toHaveAttribute('d', 'M125 60 H875');
   });
 });
